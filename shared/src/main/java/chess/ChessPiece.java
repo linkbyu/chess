@@ -13,10 +13,13 @@ public class ChessPiece {
 
     private final ChessGame.TeamColor pieceColor;
     private final PieceType type;
+    private boolean hasMoved;
+
 
     public ChessPiece(ChessGame.TeamColor pieceColor, ChessPiece.PieceType type) {
         this.pieceColor = pieceColor;
         this.type = type;
+
     }
 
     /**
@@ -46,6 +49,20 @@ public class ChessPiece {
     }
 
     /**
+     * @return Whether this chess piece has moved in the game or not
+     */
+    public boolean getHasMoved() {
+        return hasMoved;
+    }
+
+    /**
+     * Sets the hasMoved field to true
+     */
+    public void setHasMovedTrue() {
+        hasMoved = true;
+    }
+
+    /**
      * Calculates all the positions a chess piece can move to
      * Does not take into account moves that are illegal due to leaving the king in
      * danger
@@ -54,12 +71,18 @@ public class ChessPiece {
      */
     public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
         ChessPiece piece = board.getPiece(myPosition);
-        if (piece.getPieceType() == PieceType.BISHOP) {
-
+        PieceType pieceType = piece.getPieceType();
+        if (pieceType == PieceType.BISHOP) {
             var bishopCalc = new BishopMovesCalculator();
 
             return  bishopCalc.pieceMoves(board, myPosition);
         }
+        if (pieceType == PieceType.PAWN) {
+            var pawnCalc = new PawnMovesCalculator();
+
+            return  pawnCalc.pieceMoves(board, myPosition);
+        }
+
         return List.of();
     }
 }

@@ -48,3 +48,4 @@ public class BishopMovesCalculator implements PieceMovesCalculator {
         }
     }
 }
+
