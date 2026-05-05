@@ -2,7 +2,6 @@ package chess;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 
 public class PawnMovesCalculator implements PieceMovesCalculator {
 
@@ -23,9 +22,12 @@ public class PawnMovesCalculator implements PieceMovesCalculator {
             var pendingSquare = new ChessPosition(row + movementY, col);
 
             if (board.getPiece(pendingSquare) == null){ // if there's no piece in the 1st square ahead, add as an available move
-                results.add(new ChessMove(myPosition, pendingSquare, null));
+                if ( promotionSpotCheck(teamColor, pendingSquare.getRow()) ){
+                    promotion(myPosition, pendingSquare, results);
+                }
+                else results.add(new ChessMove(myPosition, pendingSquare, null));
 
-                if ( onJumpSpot(myPosition, teamColor) && (outOfBoundsCheck(row, 2*movementY)) ){ // For moving 2 squares ahead on pawn's first move
+                if ( onJumpSpot(teamColor, row) && (outOfBoundsCheck(row, 2*movementY)) ){ // For moving 2 squares ahead on pawn's first move
                     var pendingSquare2 = new ChessPosition(row + 2*movementY, col);
 
                     if (board.getPiece(pendingSquare2) == null){ // if there's no piece in the 2nd square ahead, add it as an available move
@@ -37,8 +39,6 @@ public class PawnMovesCalculator implements PieceMovesCalculator {
             diagonalCapture(board, teamColor, 1, movementY, row, col, myPosition, results); // DIAGONAL RIGHT (from white's view)
             diagonalCapture(board, teamColor, -1, movementY, row, col, myPosition, results); // DIAGONAL LEFT
         }
-
-        if ( onPromotionSpot(row, ) )
 
         return results;
     }
@@ -52,8 +52,7 @@ public class PawnMovesCalculator implements PieceMovesCalculator {
 
     }
 
-    private boolean onJumpSpot(ChessPosition myPosition, ChessGame.TeamColor teamColor){
-        int row = myPosition.getRow();
+    private boolean onJumpSpot(ChessGame.TeamColor teamColor, int row){
 
         return switch (teamColor) {
             case WHITE -> row == 2;
@@ -69,7 +68,10 @@ public class PawnMovesCalculator implements PieceMovesCalculator {
             var pendingPiece = board.getPiece(pendingDiagonalSquare);
 
             if ( (pendingPiece != null) && opposingTeamsCheck(teamColor, pendingPiece) ){ // if there is an enemy piece there, capture
-                results.add(new ChessMove(myPosition, pendingDiagonalSquare, null));
+                if ( promotionSpotCheck(teamColor, pendingDiagonalSquare.getRow()) ){
+                    promotion(myPosition, pendingDiagonalSquare, results);
+                }
+                else results.add(new ChessMove(myPosition, pendingDiagonalSquare, null));
             }
         }
     }
@@ -78,6 +80,18 @@ public class PawnMovesCalculator implements PieceMovesCalculator {
         return teamColor != pendingPiece.getTeamColor();
     }
 
-    private boolean onPromotionSpot(int row, )
+    private boolean promotionSpotCheck(ChessGame.TeamColor teamColor, int row){
+        return switch (teamColor) {
+            case WHITE -> row == 8;
+            case BLACK -> row == 1;
+        };
+    }
+
+    private void promotion(ChessPosition myPosition, ChessPosition pendingSquare, Collection<ChessMove> results){
+        results.add(new ChessMove(myPosition, pendingSquare, ChessPiece.PieceType.QUEEN));
+        results.add(new ChessMove(myPosition, pendingSquare, ChessPiece.PieceType.BISHOP));
+        results.add(new ChessMove(myPosition, pendingSquare, ChessPiece.PieceType.ROOK));
+        results.add(new ChessMove(myPosition, pendingSquare, ChessPiece.PieceType.KNIGHT));
+    }
 
 }
