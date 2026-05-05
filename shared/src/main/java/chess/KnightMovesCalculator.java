@@ -25,16 +25,16 @@ public class KnightMovesCalculator implements  PieceMovesCalculator{
         row += movementY;
 
         if ( row > 0 && row < 9 ) {
-            singleLMove(board, myPosition, -1, 0, row, col, results);
-            singleLMove(board, myPosition, 1, 0, row, col, results);
+            singleSquareMove(board, myPosition, -1, 0, row, col, results);
+            singleSquareMove(board, myPosition, 1, 0, row, col, results);
         }
     }
 
 
-    private void singleLMove(ChessBoard board, ChessPosition myPosition,
-                           int movementX, int movementY,
-                           int row, int col,
-                           Collection<ChessMove> results){
+    static void singleSquareMove(ChessBoard board, ChessPosition myPosition,
+                                 int movementX, int movementY,
+                                 int row, int col,
+                                 Collection<ChessMove> results){
         row += movementY;
         col += movementX;
 
@@ -60,8 +60,8 @@ public class KnightMovesCalculator implements  PieceMovesCalculator{
         col += movementX;
 
         if ( col > 0 && col < 9 ) {
-            singleLMove(board, myPosition, 0, 1, row, col, results);
-            singleLMove(board, myPosition, 0, -1, row, col, results);
+            singleSquareMove(board, myPosition, 0, 1, row, col, results);
+            singleSquareMove(board, myPosition, 0, -1, row, col, results);
         }
     }
 
