@@ -1,6 +1,5 @@
 package chess;
 
-import java.io.OutputStream;
 import java.util.Collection;
 import java.util.ArrayList;
 
@@ -11,22 +10,22 @@ public class BishopMovesCalculator implements PieceMovesCalculator {
     public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
         final Collection<ChessMove> results = new ArrayList<>();
 
-        diagonalMovements(board, myPosition, 1, 1, results);
-        diagonalMovements(board, myPosition, -1, 1, results);
-        diagonalMovements(board, myPosition, -1, -1, results);
-        diagonalMovements(board, myPosition, 1, -1, results);
+        slideMovements(board, myPosition, 1, 1, results);
+        slideMovements(board, myPosition, -1, 1, results);
+        slideMovements(board, myPosition, -1, -1, results);
+        slideMovements(board, myPosition, 1, -1, results);
 
         return results;
     }
 
 
-    private void diagonalMovements(ChessBoard board, ChessPosition myPosition,
-                                                    int movementXIterator, int movementYIterator,
-                                                    Collection<ChessMove> results){
+     static void slideMovements(ChessBoard board, ChessPosition myPosition,
+                                int movementXIterator, int movementYIterator,
+                                Collection<ChessMove> results){
         int row = myPosition.getRow();
         int col = myPosition.getColumn();
-        row += movementXIterator;
-        col += movementYIterator;
+        row += movementYIterator;
+        col += movementXIterator;
 
         while( (row > 0 && row < 9) && (col > 0 && col < 9) ){
             var pendingSquare = new ChessPosition(row, col);
@@ -43,8 +42,8 @@ public class BishopMovesCalculator implements PieceMovesCalculator {
                 results.add(new ChessMove(myPosition, pendingSquare, null));
                 break;
             }
-            row += movementXIterator;
-            col += movementYIterator;
+            row += movementYIterator;
+            col += movementXIterator;
         }
     }
 }

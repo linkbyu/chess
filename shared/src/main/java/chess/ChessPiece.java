@@ -82,6 +82,11 @@ public class ChessPiece {
 
             return  pawnCalc.pieceMoves(board, myPosition);
         }
+        if (pieceType == PieceType.ROOK) {
+            var rookCalc = new RookMovesCalculator();
+
+            return rookCalc.pieceMoves(board, myPosition);
+        }
 
         return List.of();
     }
