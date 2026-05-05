@@ -63,7 +63,7 @@ public class PawnMovesCalculator implements PieceMovesCalculator {
     private void diagonalCapture(ChessBoard board, ChessGame.TeamColor teamColor, int colAdd,
                                  int movementY, int row, int col,
                                  ChessPosition myPosition, Collection<ChessMove> results){
-        if (col + colAdd < 9){ // DIAGONAL CAPTURE
+        if ( (col + colAdd < 9) && (col + colAdd > 0) ){ // DIAGONAL CAPTURE
             var pendingDiagonalSquare = new ChessPosition(row + movementY, col + colAdd);
             var pendingPiece = board.getPiece(pendingDiagonalSquare);
 
