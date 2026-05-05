@@ -1,7 +1,7 @@
 package chess;
 
 import java.util.Collection;
-import java.util.List;
+import java.util.Objects;
 
 /**
  * Represents a single chess piece
@@ -13,7 +13,6 @@ public class ChessPiece {
 
     private final ChessGame.TeamColor pieceColor;
     private final PieceType type;
-    private boolean hasMoved;
 
 
     public ChessPiece(ChessGame.TeamColor pieceColor, ChessPiece.PieceType type) {
@@ -48,19 +47,6 @@ public class ChessPiece {
         return type;
     }
 
-    /**
-     * @return Whether this chess piece has moved in the game or not
-     */
-    public boolean getHasMoved() {
-        return hasMoved;
-    }
-
-    /**
-     * Sets the hasMoved field to true
-     */
-    public void setHasMovedTrue() {
-        hasMoved = true;
-    }
 
     /**
      * Calculates all the positions a chess piece can move to
@@ -72,37 +58,72 @@ public class ChessPiece {
     public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
         ChessPiece piece = board.getPiece(myPosition);
         PieceType pieceType = piece.getPieceType();
-        if (pieceType == PieceType.BISHOP) {
-            var bishopCalc = new BishopMovesCalculator();
 
-            return  bishopCalc.pieceMoves(board, myPosition);
-        }
-        if (pieceType == PieceType.PAWN) {
-            var pawnCalc = new PawnMovesCalculator();
+        return switch(pieceType) {
+            case PieceType.BISHOP:
+                var bishopCalc = new BishopMovesCalculator();
 
-            return  pawnCalc.pieceMoves(board, myPosition);
-        }
-        if (pieceType == PieceType.ROOK) {
-            var rookCalc = new RookMovesCalculator();
+                yield bishopCalc.pieceMoves(board, myPosition);
 
-            return rookCalc.pieceMoves(board, myPosition);
-        }
-        if (pieceType == PieceType.QUEEN) {
-            var queenCalc = new QueenMovesCalculator();
+            case PieceType.PAWN:
+                var pawnCalc = new PawnMovesCalculator();
+                yield pawnCalc.pieceMoves(board, myPosition);
 
-            return queenCalc.pieceMoves(board, myPosition);
-        }
-        if (pieceType == PieceType.KNIGHT) {
-            var knightCalc = new KnightMovesCalculator();
+            case PieceType.ROOK:
+                var rookCalc = new RookMovesCalculator();
+                yield rookCalc.pieceMoves(board, myPosition);
 
-            return knightCalc.pieceMoves(board, myPosition);
-        }
-        if (pieceType == PieceType.KING) {
-            var kingCalc = new KingMovesCalculator();
+            case PieceType.QUEEN:
+                var queenCalc = new QueenMovesCalculator();
+                yield queenCalc.pieceMoves(board, myPosition);
 
-            return kingCalc.pieceMoves(board, myPosition);
-        }
+            case PieceType.KNIGHT:
+                var knightCalc = new KnightMovesCalculator();
+                yield knightCalc.pieceMoves(board, myPosition);
 
-        return List.of();
+            case PieceType.KING:
+                var kingCalc = new KingMovesCalculator();
+                yield kingCalc.pieceMoves(board, myPosition);
+        };
     }
+
+
+    @Override
+    public String toString() {
+
+        return switch(pieceColor){
+            case WHITE -> switch(type){
+                case PAWN -> "P";
+                case ROOK -> "R";
+                case KNIGHT -> "N";
+                case BISHOP -> "B";
+                case QUEEN -> "Q";
+                case KING -> "K";
+            };
+            case BLACK -> switch (type){
+                case PAWN -> "p";
+                case ROOK -> "r";
+                case KNIGHT -> "n";
+                case BISHOP -> "b";
+                case QUEEN -> "q";
+                case KING -> "k";
+            };
+        };
+    }
+
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        ChessPiece that = (ChessPiece) o;
+        return pieceColor == that.pieceColor && type == that.type;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(pieceColor, type);
+    }
+
 }
