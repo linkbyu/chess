@@ -2,7 +2,6 @@ package chess;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Objects;
 
 /**
  * A class that can manage a chess game, making moves on a board
@@ -19,6 +18,8 @@ public class ChessGame {
         board = new ChessBoard();
         teamTurn = TeamColor.WHITE;
         beenInCheck = false;
+
+        board.resetBoard();
     }
 
     /**
@@ -75,7 +76,7 @@ public class ChessGame {
         var boardCopy = (ChessBoard) board.clone();
         movePiece(boardCopy, move, startPosition);
         return wouldBeInCheck(boardCopy, teamColor);
-    } // isValid calls movePiece and isInCheck
+    }
 
 
     private void movePiece(ChessBoard boardCopy, ChessMove move, ChessPosition startPosition){
@@ -111,7 +112,6 @@ public class ChessGame {
                 }
             }
         }
-
         return false;
     }
 
@@ -200,10 +200,22 @@ public class ChessGame {
      * @return True if the specified team is in checkmate
      */
     public boolean isInCheckmate(TeamColor teamColor) {
-        ChessPosition kingPosition = findKing(board, teamColor);
+        if ( isInCheck(teamColor) ){
+            return verifyNoValidMoves(teamColor);
+        }
+        else return false;
+    }
 
+    private boolean verifyNoValidMoves(TeamColor teamColor){
+        Collection<ChessPosition> teamPieces = findTeamPieces(board, teamColor);
 
-        return isInCheck(teamColor) && validMoves(kingPosition).isEmpty();
+        for ( ChessPosition teamPosition : teamPieces ){
+            if ( !validMoves(teamPosition).isEmpty() ){
+                return false;
+            }
+
+        }
+        return true; // no valid team moves, they're all empty
     }
 
     /**
@@ -214,8 +226,10 @@ public class ChessGame {
      * @return True if the specified team is in stalemate, otherwise false
      */
     public boolean isInStalemate(TeamColor teamColor) {
-        ChessPosition kingPosition = findKing(board, teamColor);
-        return !isInCheck(teamColor) && validMoves(kingPosition).isEmpty();
+        if ( !isInCheck(teamColor) ){
+            return verifyNoValidMoves(teamColor);
+        }
+        else return false;
     }
 
     /**
