@@ -125,7 +125,12 @@ public class ChessBoard implements Cloneable {
         try{
             ChessBoard clonedBoard = (ChessBoard) super.clone();
 
-            clonedBoard.squares = Arrays.copyOf(squares, squares.length);
+            ChessPiece[][] clonedSquares = new ChessPiece[8][8];
+            for (int rowNum = 1; rowNum < 9; rowNum++){
+                clonedSquares[rowNum - 1] = Arrays.copyOf(squares[rowNum - 1], squares[rowNum - 1].length);
+            }
+            clonedBoard.squares = clonedSquares;
+
             return clonedBoard;
 
         } catch (CloneNotSupportedException e) {
