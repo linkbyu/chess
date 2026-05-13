@@ -14,7 +14,7 @@ public class ChessBoard {
     ChessPiece[][] squares = new ChessPiece[8][8];
 
     public ChessBoard() {
-
+        
     }
 
     /**
@@ -43,59 +43,60 @@ public class ChessBoard {
      * (How the game of chess normally starts)
      */
     public void resetBoard() {
-        backRow(ChessGame.TeamColor.WHITE);
-        backRow(ChessGame.TeamColor.BLACK);
-        pawnRow(ChessGame.TeamColor.WHITE);
-        pawnRow(ChessGame.TeamColor.BLACK);
+        backRowSetup(ChessGame.TeamColor.WHITE);
+        backRowSetup(ChessGame.TeamColor.BLACK);
+        pawnRowSetup(ChessGame.TeamColor.WHITE);
+        pawnRowSetup(ChessGame.TeamColor.BLACK);
+
     }
 
-
-    private void backRow(ChessGame.TeamColor teamColor){
-        int row = switch (teamColor) {
-            case ChessGame.TeamColor.WHITE -> 1;
-            case ChessGame.TeamColor.BLACK -> 8;
+    private void backRowSetup(ChessGame.TeamColor teamColor) {
+        int backRow = switch(teamColor){
+            case WHITE -> 1;
+            case BLACK -> 8;
         };
 
-        addPiece(new ChessPosition(row, 1), new ChessPiece(teamColor, ChessPiece.PieceType.ROOK));
-        addPiece(new ChessPosition(row, 2), new ChessPiece(teamColor, ChessPiece.PieceType.KNIGHT));
-        addPiece(new ChessPosition(row, 3), new ChessPiece(teamColor, ChessPiece.PieceType.BISHOP));
-        addPiece(new ChessPosition(row, 4), new ChessPiece(teamColor, ChessPiece.PieceType.QUEEN));
-        addPiece(new ChessPosition(row, 5), new ChessPiece(teamColor, ChessPiece.PieceType.KING));
-        addPiece(new ChessPosition(row, 6), new ChessPiece(teamColor, ChessPiece.PieceType.BISHOP));
-        addPiece(new ChessPosition(row, 7), new ChessPiece(teamColor, ChessPiece.PieceType.KNIGHT));
-        addPiece(new ChessPosition(row, 8), new ChessPiece(teamColor, ChessPiece.PieceType.ROOK));
+        addPiece(new ChessPosition(backRow, 1), new ChessPiece(teamColor, ChessPiece.PieceType.ROOK));
+        addPiece(new ChessPosition(backRow, 2), new ChessPiece(teamColor, ChessPiece.PieceType.KNIGHT));
+        addPiece(new ChessPosition(backRow, 3), new ChessPiece(teamColor, ChessPiece.PieceType.BISHOP));
+        addPiece(new ChessPosition(backRow, 4), new ChessPiece(teamColor, ChessPiece.PieceType.QUEEN));
+
+        addPiece(new ChessPosition(backRow, 5), new ChessPiece(teamColor, ChessPiece.PieceType.KING));
+        addPiece(new ChessPosition(backRow, 6), new ChessPiece(teamColor, ChessPiece.PieceType.BISHOP));
+        addPiece(new ChessPosition(backRow, 7), new ChessPiece(teamColor, ChessPiece.PieceType.KNIGHT));
+        addPiece(new ChessPosition(backRow, 8), new ChessPiece(teamColor, ChessPiece.PieceType.ROOK));
 
     }
 
-
-    private void pawnRow(ChessGame.TeamColor teamColor){
-        int row = switch (teamColor) {
-            case ChessGame.TeamColor.WHITE -> 2;
-            case ChessGame.TeamColor.BLACK -> 7;
+    private void pawnRowSetup(ChessGame.TeamColor teamColor) {
+        int pawnRow = switch(teamColor){
+            case WHITE -> 2;
+            case BLACK -> 7;
         };
 
         for (int col = 1; col < 9; col++){
-            addPiece(new ChessPosition(row, col), new ChessPiece(teamColor, ChessPiece.PieceType.PAWN));
+            addPiece(new ChessPosition(pawnRow, col), new ChessPiece(teamColor, ChessPiece.PieceType.PAWN));
         }
     }
 
 
     @Override
     public String toString() {
-        var boardOutput = new StringBuilder();
+        var builder = new StringBuilder();
+
         for (ChessPiece[] row : squares){
-            boardOutput.append("|");
+            builder.append("|");
             for (ChessPiece piece : row){
-                if (piece != null) {
-                    boardOutput.append(piece);
+                if (piece != null){
+                    builder.append(piece);
+                    builder.append("|");
                 }
-                else boardOutput.append(" ");
-                boardOutput.append("|");
+                else builder.append(" ");
             }
-            boardOutput.append("\n");
+            builder.append("\n");
         }
 
-        return boardOutput.toString();
+        return builder.toString();
     }
 
     @Override
@@ -111,5 +112,18 @@ public class ChessBoard {
     public int hashCode() {
         return Arrays.deepHashCode(squares);
     }
-}
 
+    @Override
+    public Object clone() {
+        try{
+            ChessBoard clonedBoard = (ChessBoard) super.clone();
+
+            clonedBoard.squares = Arrays.copyOf(squares, squares.length);
+            return clonedBoard;
+
+        } catch (CloneNotSupportedException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+}

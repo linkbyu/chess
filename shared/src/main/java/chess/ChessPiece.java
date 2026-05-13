@@ -1,6 +1,7 @@
 package chess;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -14,11 +15,9 @@ public class ChessPiece {
     private final ChessGame.TeamColor pieceColor;
     private final PieceType type;
 
-
-    public ChessPiece(ChessGame.TeamColor pieceColor, ChessPiece.PieceType type) {
+    public ChessPiece(ChessGame.TeamColor pieceColor, PieceType type) {
         this.pieceColor = pieceColor;
         this.type = type;
-
     }
 
     /**
@@ -37,6 +36,7 @@ public class ChessPiece {
      * @return Which team this chess piece belongs to
      */
     public ChessGame.TeamColor getTeamColor() {
+
         return pieceColor;
     }
 
@@ -44,9 +44,9 @@ public class ChessPiece {
      * @return which type of chess piece this piece is
      */
     public PieceType getPieceType() {
+
         return type;
     }
-
 
     /**
      * Calculates all the positions a chess piece can move to
@@ -56,43 +56,39 @@ public class ChessPiece {
      * @return Collection of valid moves
      */
     public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
-        ChessPiece piece = board.getPiece(myPosition);
-        PieceType pieceType = piece.getPieceType();
+        var pieceType = board.getPiece(myPosition).getPieceType();
 
-        return switch(pieceType) {
-            case PieceType.BISHOP:
-                var bishopCalc = new BishopMovesCalculator();
+        return switch(pieceType){
+            case KING:
+                var kingCalc = new KingMovesCalc();
+                yield kingCalc.pieceMoves(board, myPosition);
 
-                yield bishopCalc.pieceMoves(board, myPosition);
-
-            case PieceType.PAWN:
-                var pawnCalc = new PawnMovesCalculator();
-                yield pawnCalc.pieceMoves(board, myPosition);
-
-            case PieceType.ROOK:
-                var rookCalc = new RookMovesCalculator();
-                yield rookCalc.pieceMoves(board, myPosition);
-
-            case PieceType.QUEEN:
-                var queenCalc = new QueenMovesCalculator();
+            case QUEEN:
+                var queenCalc = new QueenMovesCalc();
                 yield queenCalc.pieceMoves(board, myPosition);
 
-            case PieceType.KNIGHT:
-                var knightCalc = new KnightMovesCalculator();
+            case BISHOP:
+                var bishopCalc = new BishopMovesCalc();
+                yield bishopCalc.pieceMoves(board, myPosition);
+
+            case KNIGHT:
+                var knightCalc = new KnightMovesCalc();
                 yield knightCalc.pieceMoves(board, myPosition);
 
-            case PieceType.KING:
-                var kingCalc = new KingMovesCalculator();
-                yield kingCalc.pieceMoves(board, myPosition);
+            case ROOK:
+                var rookCalc = new RookMovesCalc();
+                yield rookCalc.pieceMoves(board, myPosition);
+
+            case PAWN:
+                var pawnCalc = new PawnMovesCalc();
+                yield pawnCalc.pieceMoves(board, myPosition);
         };
     }
 
-
     @Override
     public String toString() {
-
         return switch(pieceColor){
-            case WHITE -> switch(type){
+            case WHITE -> switch (type){
                 case PAWN -> "P";
                 case ROOK -> "R";
                 case KNIGHT -> "N";
@@ -111,7 +107,6 @@ public class ChessPiece {
         };
     }
 
-
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) {
@@ -125,5 +120,4 @@ public class ChessPiece {
     public int hashCode() {
         return Objects.hash(pieceColor, type);
     }
-
 }

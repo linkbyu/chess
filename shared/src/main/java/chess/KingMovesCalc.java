@@ -3,14 +3,13 @@ package chess;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import static chess.KnightMovesCalculator.singleSquareMove;
+import static chess.KnightMovesCalc.singleSquareMove;
 
-public class KingMovesCalculator implements PieceMovesCalculator {
-
+public class KingMovesCalc implements PieceMovesCalc{
 
     @Override
     public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
-        final Collection<ChessMove> results = new ArrayList<>();
+        Collection<ChessMove> results = new ArrayList<>();
         int row = myPosition.getRow();
         int col = myPosition.getColumn();
 
@@ -26,6 +25,4 @@ public class KingMovesCalculator implements PieceMovesCalculator {
 
         return results;
     }
-
-
 }
