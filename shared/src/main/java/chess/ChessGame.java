@@ -10,7 +10,7 @@ import java.util.List;
  * signature of the existing methods.
  */
 public class ChessGame {
-    private final ChessBoard board;
+    private ChessBoard board;
     private TeamColor teamTurn;
 
     public ChessGame() {
@@ -49,31 +49,35 @@ public class ChessGame {
      * @return Set of valid moves for requested piece, or null if no piece at
      * startPosition
      */
-    /*public Collection<ChessMove> validMoves(ChessPosition startPosition) {
+    public Collection<ChessMove> validMoves(ChessPosition startPosition) {
         ChessPiece piece = board.getPiece(startPosition);
         if (piece == null) return null;
         else {
             Collection<ChessMove> validMoves = piece.pieceMoves(board, startPosition);
+            TeamColor pieceColor = piece.getTeamColor();
 
-            var boardCopy = board.clone();
-            for (ChessMove move : validMoves){
-                if (!isValid(boardCopy, move); //remove from validMoves list
-                // isInCheck
-                makesTheMove(move); // with the boardCopy
-            }
+            var boardCopy = (ChessBoard) board.clone();
+            validMoves.removeIf(move -> !isValid(boardCopy, move, piece, pieceColor)); //remove from validMoves list
+
+            return validMoves;
         }
+    }
 
-        return List.of();
-    }*/
+    private boolean isValid(ChessBoard boardCopy, ChessMove move, ChessPiece piece, TeamColor teamColor){
+        makesTheMove(boardCopy, piece, move);
+        return isInCheck(teamColor);
+    }
     // isValid calls makesTheMove and isInCheck
     //
 
-    // void makesTheMove(){
-    //
-    // boardCopy.addPiece(startPostition, null) replace where it is with null
-    // boardCopy.addPiece() to where it's going
-    //
-    // }
+    private void makesTheMove(ChessBoard boardCopy, ChessPiece piece, ChessMove move){
+        ChessPosition startPosition = move.getStartPosition();
+        ChessPosition endPosition = move.getEndPosition();
+
+        boardCopy.addPiece(startPosition, null); // replace where it is with null
+        boardCopy.addPiece(endPosition, piece); // add to where it's going
+    }
+
 
     /**
      * Makes a move in the chess game
@@ -83,6 +87,8 @@ public class ChessGame {
      */
     public void makeMove(ChessMove move) throws InvalidMoveException { // like a GameTurn method
         // if move in validMoves
+
+        if ()
         throw new RuntimeException("Not implemented");
     }
 
@@ -115,7 +121,7 @@ public class ChessGame {
      * @return True if the specified team is in stalemate, otherwise false
      */
     public boolean isInStalemate(TeamColor teamColor) {
-        throw new RuntimeException("Not implemented");
+        if ( !isInCheck(teamColor) && validMoves()) return
     }
 
     /**
@@ -124,7 +130,7 @@ public class ChessGame {
      * @param board the new board to use
      */
     public void setBoard(ChessBoard board) {
-        throw new RuntimeException("Not implemented");
+        this.board = board;
     }
 
     /**

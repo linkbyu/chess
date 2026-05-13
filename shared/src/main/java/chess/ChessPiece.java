@@ -1,7 +1,6 @@
 package chess;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Objects;
 
 /**
@@ -56,9 +55,7 @@ public class ChessPiece {
      * @return Collection of valid moves
      */
     public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
-        var pieceType = board.getPiece(myPosition).getPieceType();
-
-        return switch(pieceType){
+        return switch(type){
             case KING:
                 var kingCalc = new KingMovesCalc();
                 yield kingCalc.pieceMoves(board, myPosition);
