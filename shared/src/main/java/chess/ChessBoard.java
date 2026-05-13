@@ -9,13 +9,17 @@ import java.util.Objects;
  * Note: You can add to this class, but you may not alter
  * signature of the existing methods.
  */
-public class ChessBoard {
+public class ChessBoard implements Cloneable {
 
-    ChessPiece[][] squares = new ChessPiece[8][8];
+    private ChessPiece[][] squares = new ChessPiece[8][8];
 
     public ChessBoard() {
         
     }
+
+    /*public ChessPiece[][] getSquares() {
+        return squares;
+    }*/
 
     /**
      * Adds a chess piece to the chessboard
@@ -43,14 +47,14 @@ public class ChessBoard {
      * (How the game of chess normally starts)
      */
     public void resetBoard() {
-        backRowSetup(ChessGame.TeamColor.WHITE);
-        backRowSetup(ChessGame.TeamColor.BLACK);
-        pawnRowSetup(ChessGame.TeamColor.WHITE);
-        pawnRowSetup(ChessGame.TeamColor.BLACK);
+        setUpBackRow(ChessGame.TeamColor.WHITE);
+        setUpBackRow(ChessGame.TeamColor.BLACK);
+        setUpPawnRow(ChessGame.TeamColor.WHITE);
+        setUpPawnRow(ChessGame.TeamColor.BLACK);
 
     }
 
-    private void backRowSetup(ChessGame.TeamColor teamColor) {
+    private void setUpBackRow(ChessGame.TeamColor teamColor) {
         int backRow = switch(teamColor){
             case WHITE -> 1;
             case BLACK -> 8;
@@ -68,7 +72,7 @@ public class ChessBoard {
 
     }
 
-    private void pawnRowSetup(ChessGame.TeamColor teamColor) {
+    private void setUpPawnRow(ChessGame.TeamColor teamColor) {
         int pawnRow = switch(teamColor){
             case WHITE -> 2;
             case BLACK -> 7;
@@ -91,7 +95,10 @@ public class ChessBoard {
                     builder.append(piece);
                     builder.append("|");
                 }
-                else builder.append(" ");
+                else{
+                    builder.append(" ");
+                    builder.append("|");
+                }
             }
             builder.append("\n");
         }

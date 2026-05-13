@@ -1,7 +1,8 @@
 package chess;
 
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
+import java.util.Objects;
 
 /**
  * A class that can manage a chess game, making moves on a board
@@ -12,10 +13,12 @@ import java.util.List;
 public class ChessGame {
     private ChessBoard board;
     private TeamColor teamTurn;
+    private boolean beenInCheck;
 
     public ChessGame() {
         board = new ChessBoard();
         teamTurn = TeamColor.WHITE;
+        beenInCheck = false;
     }
 
     /**
@@ -57,21 +60,27 @@ public class ChessGame {
             TeamColor pieceColor = piece.getTeamColor();
 
             var boardCopy = (ChessBoard) board.clone();
-            validMoves.removeIf(move -> !isValid(boardCopy, move, piece, pieceColor)); //remove from validMoves list
+            Collection<ChessMove> removeArray = new ArrayList<>(); //remove from validMoves list
+            for (ChessMove move : validMoves){
+                if ( !isValid(boardCopy, move, startPosition, pieceColor) )
+                    removeArray.add(move);
+            }
+            for (var move : removeArray)
+                validMoves.remove(move);
 
             return validMoves;
         }
     }
 
-    private boolean isValid(ChessBoard boardCopy, ChessMove move, ChessPiece piece, TeamColor teamColor){
-        makesTheMove(boardCopy, piece, move);
-        return isInCheck(teamColor);
-    }
-    // isValid calls makesTheMove and isInCheck
-    //
+    private boolean isValid(ChessBoard boardCopy, ChessMove move, ChessPosition startPosition, TeamColor teamColor){
+        movePiece(boardCopy, move, startPosition);
+        return !isInCheck(teamColor);
+    } // isValid calls movePiece and isInCheck
 
-    private void makesTheMove(ChessBoard boardCopy, ChessPiece piece, ChessMove move){
-        ChessPosition startPosition = move.getStartPosition();
+
+
+    private void movePiece(ChessBoard boardCopy, ChessMove move, ChessPosition startPosition){
+        ChessPiece piece = boardCopy.getPiece(startPosition);
         ChessPosition endPosition = move.getEndPosition();
 
         boardCopy.addPiece(startPosition, null); // replace where it is with null
@@ -86,11 +95,13 @@ public class ChessGame {
      * @throws InvalidMoveException if move is invalid
      */
     public void makeMove(ChessMove move) throws InvalidMoveException { // like a GameTurn method
-        // if move in validMoves
+        ChessPosition startPosition = move.getStartPosition();
+        Collection<ChessMove> validMoveList = validMoves(startPosition);
 
-        if ()
-        throw new RuntimeException("Not implemented");
+        if ( validMoveList.contains(move) ) // if move in validMoves,
+            movePiece(board, move, startPosition); // move the piece on the actual board
     }
+
 
     /**
      * Determines if the given team is in check
@@ -99,8 +110,60 @@ public class ChessGame {
      * @return True if the specified team is in check
      */
     public boolean isInCheck(TeamColor teamColor) {
+        ChessPosition kingPosition = findKing(teamColor);
 
-        throw new RuntimeException("Not implemented");
+        TeamColor opposingTeam = switch(teamColor){
+            case WHITE -> TeamColor.BLACK;
+            case BLACK -> TeamColor.WHITE;
+        };
+        Collection<ChessPosition> opposingTeamPositions = findTeamPieces(opposingTeam);
+
+        // cycle through opposingTeam's pieces to see if one of their pieces has a valid move
+        // that ends on the King's Position
+        for (var piecePosition : opposingTeamPositions){
+            ChessPiece opposingPiece = board.getPiece(piecePosition);
+
+            var opposingPieceMoves = opposingPiece.pieceMoves(board, piecePosition);
+            for (ChessMove opposingMove : opposingPieceMoves){
+                ChessPosition endPosition = opposingMove.getEndPosition();
+                if ( endPosition.equals(kingPosition) ){
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Finds the position of a team's King piece
+     * @param teamColor which team's King to search for
+     * @return A ChessPosition where the desired team's King is
+     */
+    private ChessPosition findKing(TeamColor teamColor){
+        Collection<ChessPosition> teamPiecePositions = findTeamPieces(teamColor);
+        for (var piecePosition : teamPiecePositions){
+            var piece = board.getPiece(piecePosition);
+
+            if ( piece.getPieceType() == ChessPiece.PieceType.KING)
+                return piecePosition;
+        }
+        throw new RuntimeException("No King of team " + teamColor + " Found on the Board!");
+    }
+
+    private Collection<ChessPosition> findTeamPieces(TeamColor requestedTeamColor){
+        Collection<ChessPosition> teamPiecePositions = new ArrayList<>();
+
+        for (int row = 1; row < 9; row++){
+            for (int col = 1; col < 9; col++){
+                var currentPosition = new ChessPosition(row, col);
+                var piece = board.getPiece(currentPosition);
+
+                if ( (piece != null) && (piece.getTeamColor() == requestedTeamColor) )
+                    teamPiecePositions.add(currentPosition);
+            }
+        }
+        return teamPiecePositions;
     }
 
     /**
@@ -110,7 +173,8 @@ public class ChessGame {
      * @return True if the specified team is in checkmate
      */
     public boolean isInCheckmate(TeamColor teamColor) {
-        throw new RuntimeException("Not implemented");
+        ChessPosition kingPosition = findKing(teamColor);
+        return isInCheck(teamColor) && validMoves(kingPosition).isEmpty();
     }
 
     /**
@@ -121,7 +185,9 @@ public class ChessGame {
      * @return True if the specified team is in stalemate, otherwise false
      */
     public boolean isInStalemate(TeamColor teamColor) {
-        if ( !isInCheck(teamColor) && validMoves()) return
+        ChessPosition kingPosition = findKing(teamColor);
+
+        return !isInCheck(teamColor) && validMoves(kingPosition).isEmpty();
     }
 
     /**
@@ -141,4 +207,19 @@ public class ChessGame {
     public ChessBoard getBoard() {
         return board;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof ChessGame chessGame)) {
+            return false;
+        }
+        return Objects.equals(board, chessGame.board) && teamTurn == chessGame.teamTurn;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(board, teamTurn);
+    }
+
 }
+
