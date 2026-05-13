@@ -124,19 +124,27 @@ public class ChessGame {
      */
     public void makeMove(ChessMove move) throws InvalidMoveException { // like a GameTurn method
         ChessPosition startPosition = move.getStartPosition();
-        Collection<ChessMove> validMoves = validMoves(startPosition);
+        ChessPiece piece = board.getPiece(startPosition);
+        TeamColor currentTeamTurn = getTeamTurn();
 
-        if ( validMoves.contains(move) ) // if move in validMoves,
+
+        if ( piece != null && (piece.getTeamColor() == currentTeamTurn) && validMoves(startPosition).contains(move) ) { // if move in validMoves,
             movePiece(board, move, startPosition); // move the piece on the actual board
+
+            // Pawn Promotions
+            var promotionPiece = move.getPromotionPiece();
+            if ( promotionPiece != null ){
+                piece.setPieceType(promotionPiece);
+            }
+
+            // Switch turns
+            switch(currentTeamTurn){
+                case WHITE -> setTeamTurn(TeamColor.BLACK);
+                case BLACK -> setTeamTurn(TeamColor.WHITE);
+            }
+        }
         else
             throw new InvalidMoveException(move.toString());
-
-        // Switch turns
-        TeamColor currentTeamTurn = getTeamTurn();
-        switch(currentTeamTurn){
-            case WHITE -> setTeamTurn(TeamColor.BLACK);
-            case BLACK -> setTeamTurn(TeamColor.WHITE);
-        }
 
         // EXTRA CREDIT:
         // if (pieceType == KING or ROOK
@@ -193,6 +201,8 @@ public class ChessGame {
      */
     public boolean isInCheckmate(TeamColor teamColor) {
         ChessPosition kingPosition = findKing(board, teamColor);
+
+
         return isInCheck(teamColor) && validMoves(kingPosition).isEmpty();
     }
 
