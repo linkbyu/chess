@@ -12,10 +12,14 @@ import java.util.Collection;
 public class ChessGame {
     private ChessBoard board;
     private TeamColor teamTurn;
+    private boolean enPassantWhiteTurn;
+    private boolean enPassantBlackTurn;
 
     public ChessGame() {
         board = new ChessBoard();
         teamTurn = TeamColor.WHITE;
+        enPassantWhiteTurn = false;
+        enPassantBlackTurn = false;
 
         board.resetBoard();
     }
@@ -34,6 +38,12 @@ public class ChessGame {
      */
     public void setTeamTurn(TeamColor team) {
         teamTurn = team;
+
+        if (enPassantWhiteTurn || enPassantBlackTurn)
+            switch(team){
+                case WHITE -> enPassantBlackTurn = false;
+                case BLACK -> enPassantWhiteTurn = false;
+            }
     }
 
     /**
@@ -65,11 +75,17 @@ public class ChessGame {
             }
             for (var move : removeArray)
                 validMoves.remove(move);
+            ChessPiece.PieceType pieceType = piece.getPieceType();
 
 
             // ADD CASTLING MOVES IF VALID
-            if ( (piece.getPieceType() == ChessPiece.PieceType.KING) && piece.getHasNotMoved() )
+            if ( (pieceType == ChessPiece.PieceType.KING) && piece.getHasNotMoved() )
                 addValidCastleMoves(validMoves, pieceColor, startPosition);
+
+            // ADD EN PASSANT IF VALID
+            if ( (pieceType == ChessPiece.PieceType.PAWN) && verifyEnPassantTurn(pieceColor) )
+                addValidEnPassant(validMoves, startPosition);
+
 
             return validMoves;
         }
@@ -91,10 +107,28 @@ public class ChessGame {
             boardCopy.addPiece(startPosition, null); // replace where it is with null
             boardCopy.addPiece(endPosition, piece); // add to where it's going
 
+            var pieceType = piece.getPieceType();
+            boolean pieceJustMoved = piece.getHasNotMoved();
 
             // IF MOVE CASTLED KING, MOVE ROOK
-            if ( (piece.getPieceType() == ChessPiece.PieceType.KING) && piece.getHasNotMoved() )
+            if ( ( pieceType == ChessPiece.PieceType.KING) && pieceJustMoved )
                 moveRookAfterCastle(boardCopy, move, piece);
+
+            boolean pieceIsAPawn = pieceType == ChessPiece.PieceType.PAWN;
+            // IF THE MOVE IS AN EN PASSANT, REMOVE THE CAPTURED PAWN
+            if ( (pieceIsAPawn) && verifyEnPassantMove(move) )
+                boardCopy.addPiece(new ChessPosition(startPosition.getRow(), endPosition.getColumn()), null);
+
+
+            // IF PAWN MOVED 2 FORWARD, ALLOW EN PASSANT FOR OPPOSING TEAM NEXT TURN
+            if ( (pieceIsAPawn) && verifyPawn2Forward(move) && pieceJustMoved ) {
+                switch(piece.getTeamColor()){
+                    case WHITE -> enPassantBlackTurn = true;
+                    case BLACK -> enPassantWhiteTurn = true;
+                }
+                piece.setDid2Forward(true);
+            }
+
             piece.hasMoved();
         }
         else throw new RuntimeException("Trying to move a non-existent piece");
@@ -190,6 +224,80 @@ public class ChessGame {
         }
     }
 
+
+    private boolean verifyEnPassantTurn(TeamColor pieceColor){
+        return switch(pieceColor){
+            case WHITE -> enPassantWhiteTurn;
+            case BLACK -> enPassantBlackTurn;
+        };
+    }
+
+    private void addValidEnPassant(Collection<ChessMove> validMoves, ChessPosition pawnPosition){
+        verifySidePawn(validMoves, pawnPosition, true);
+        verifySidePawn(validMoves, pawnPosition, false);
+    }
+
+    /**
+     * Verifies that the adjacent pieces are pawns and that they moved 2 forward last turn.
+     * Adds the En Passant move to validMoves if verified.
+     * @param validMoves A list of valid moves a piece can make that turn
+     * @param pawnPosition Current position of the pawn attempting the en passant
+     * @param rightSide looks at the adjacent right side if true, and adjacent left side if false
+     */
+    private void verifySidePawn(Collection<ChessMove> validMoves, ChessPosition pawnPosition, boolean rightSide){
+        int row = pawnPosition.getRow();
+        int col = pawnPosition.getColumn();
+
+        int colIter;
+        boolean withinBounds;
+        if ( rightSide ) { // for verifying the right side piece
+            colIter = 1;
+            withinBounds = col < 8;
+        }
+        else{ // for verifying the left side piece
+            colIter = -1;
+            withinBounds = col > 1;
+        }
+
+
+        if ( withinBounds ) {
+            ChessPiece sidePiece = board.getPiece(new ChessPosition(row, col + colIter ));
+
+            if (sidePiece != null && sidePiece.getDid2Forward() && (sidePiece.getPieceType() == ChessPiece.PieceType.PAWN) ) {
+                // side piece isn't null, did 2 forward, and is a pawn
+                TeamColor sidePieceColor = sidePiece.getTeamColor();
+                int newRow = switch(sidePieceColor){
+                    case WHITE -> row - 1;
+                    case BLACK -> row + 1;
+                };
+                validMoves.add(new ChessMove(pawnPosition, new ChessPosition(newRow, col + colIter), null));
+            }
+        }
+    }
+
+    private boolean verifyEnPassantMove(ChessMove move){
+        ChessPosition startPosition = move.getStartPosition();
+        ChessPosition endPosition = move.getEndPosition();
+
+        int rowStart = startPosition.getRow();
+        int rowFinish = endPosition.getRow();
+        int colStart = startPosition.getColumn();
+        int colFinish = endPosition.getColumn();
+
+        if ( (Math.abs(colFinish - colStart) == 1) && (Math.abs(rowFinish - rowStart) == 1) ){
+            var adjacentPiece = board.getPiece(new ChessPosition(rowStart, colFinish));
+            return (adjacentPiece != null) && (adjacentPiece.getPieceType() == ChessPiece.PieceType.PAWN);
+        }
+        else return false;
+
+    }
+
+    private boolean verifyPawn2Forward(ChessMove move){
+        int rowFinish = move.getEndPosition().getRow();
+        int rowStart = move.getStartPosition().getRow();
+
+        return Math.abs(rowFinish - rowStart) == 2;
+    }
 
     /**
      * Makes a move in the chess game

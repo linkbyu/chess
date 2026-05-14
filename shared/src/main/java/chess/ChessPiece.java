@@ -14,11 +14,13 @@ public class ChessPiece implements Cloneable{
     private final ChessGame.TeamColor pieceColor;
     private PieceType type;
     private boolean hasNotMoved;
+    private boolean did2Forward;
 
     public ChessPiece(ChessGame.TeamColor pieceColor, PieceType type) {
         this.pieceColor = pieceColor;
         this.type = type;
         hasNotMoved = true;
+        did2Forward = false;
     }
 
     /**
@@ -57,6 +59,14 @@ public class ChessPiece implements Cloneable{
 
     public void hasMoved() {
         hasNotMoved = false;
+    }
+
+    public boolean getDid2Forward() {
+        return did2Forward;
+    }
+
+    public void setDid2Forward(boolean did2Forward) {
+        this.did2Forward = did2Forward;
     }
 
     /**
@@ -136,6 +146,7 @@ public class ChessPiece implements Cloneable{
             ChessPiece clonedPiece = (ChessPiece) super.clone();
             clonedPiece.type = this.type;
             clonedPiece.hasNotMoved = this.hasNotMoved;
+            clonedPiece.did2Forward = this.did2Forward;
 
             return clonedPiece;
         } catch (CloneNotSupportedException e) {
