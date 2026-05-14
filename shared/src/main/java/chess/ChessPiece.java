@@ -133,6 +133,8 @@ public class ChessPiece implements Cloneable{
         }
         ChessPiece that = (ChessPiece) o;
         return pieceColor == that.pieceColor && type == that.type;
+        /* NOTE: must not compare hasNotMoved or did2Forward fields for equality!!
+           Don't change the equals() and hashCode method here */
     }
 
     @Override
