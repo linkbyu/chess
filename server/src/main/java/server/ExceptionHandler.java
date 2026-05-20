@@ -10,23 +10,27 @@ public class ExceptionHandler implements io.javalin.http.ExceptionHandler<Except
 
     @Override
     public void handle(@NotNull Exception e, @NotNull Context ctx) {
-        ctx.json("{ \"message\": \"Error: ");
+        var builder = new StringBuilder();
+        builder.append("{ \"message\": \"Error: ");
 
         switch(e) {
             case BadRequestException _:
                 ctx.status(400);
-                ctx.json("bad request");
+                builder.append("bad request");
                 break;
             case UnauthorizedResponse _:
                 ctx.status(401);
-                ctx.json("unauthorized");
+                builder.append("unauthorized");
+                break;
             case AlreadyTakenException _:
                 ctx.status(403);
-                ctx.json("already taken");
+                builder.append("already taken");
+                break;
             default:
                 ctx.status(500);
-                ctx.json(e.getMessage());
+                builder.append(e.getMessage());
         }
-        ctx.json("\" }");
+        builder.append("\" }");
+        ctx.json(builder.toString());
     }
 }

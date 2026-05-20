@@ -31,23 +31,7 @@ public class Server {
                 .delete("/db", ctx -> clearService.clear() )
                 .post("/user", new RegisterHandler(userService) )
                 .post("/session", new LoginHandler(userService) )
-                .exception(Exception.class, new ExceptionHandler() )
-                .exception(BadRequestException.class, (e, ctx) -> {
-                    ctx.status(400);
-                    ctx.json("{ \"message\": \"Error: bad request\" }");
-                })
-                .exception(UnauthorizedResponse.class, (e, ctx) -> {
-                    ctx.status(401);
-                    ctx.json("{ \"message\": \"Error: unauthorized\" }");
-                })
-                .exception(AlreadyTakenException.class, (e, ctx) -> {
-                    ctx.status(403);
-                    ctx.json("{ \"message\": \"Error: already taken\" }");
-                })
-                .exception(Exception.class, (e, ctx) -> {
-                    ctx.status(500);
-                    ctx.json("{ \"message\": \"Error: " + e.getMessage() + "\" }");
-                });
+                .exception(Exception.class, new ExceptionHandler() );
 
 
     }
