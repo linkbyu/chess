@@ -1,6 +1,8 @@
 package service;
 
 
+import dataaccess.MemoryAuthDAO;
+import dataaccess.MemoryUserDAO;
 import dataaccess.exception.AlreadyTakenException;
 import dataaccess.exception.DataAccessException;
 import dataaccess.UserDAO;
@@ -17,9 +19,9 @@ public class UserService {
     private final AuthDAO authDAO;
 
 
-    public UserService(UserDAO userDAO, AuthDAO authDAO) {
-        this.userDAO = userDAO;
-        this.authDAO = authDAO;
+    public UserService() {
+        this.userDAO = new MemoryUserDAO();
+        this.authDAO = new MemoryAuthDAO();
     }
 
 

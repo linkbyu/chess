@@ -15,7 +15,7 @@ public class UserServiceTest {
 
     @BeforeEach
     void setUp() throws DataAccessException {
-        userService = new UserService(new MemoryUserDAO(), new MemoryAuthDAO());
+        userService = new UserService();
 
         userService.register(new RegisterRequest("ben", "abc", "laa@gmail.com"));
     }
