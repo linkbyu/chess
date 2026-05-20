@@ -2,6 +2,7 @@ package service;
 
 import dataaccess.*;
 import dataaccess.exception.AlreadyTakenException;
+import dataaccess.exception.BadRequestException;
 import dataaccess.exception.DataAccessException;
 import model.AuthData;
 import model.UserData;
@@ -14,15 +15,15 @@ public class UserServiceTest {
     private UserService userService;
 
     @BeforeEach
-    void setUp() throws DataAccessException {
-        userService = new UserService();
+    void setUp() throws DataAccessException, BadRequestException {
+        userService = new UserService(new MemoryUserDAO(), new MemoryAuthDAO());
 
         userService.register(new RegisterRequest("ben", "abc", "laa@gmail.com"));
     }
 
     @Test
     void registerNullUsername(){
-        Assertions.assertThrows(DataAccessException.class, () ->
+        Assertions.assertThrows(BadRequestException.class, () ->
                 userService.register(new RegisterRequest("", "", "")));
     }
 
@@ -33,7 +34,7 @@ public class UserServiceTest {
     }
 
     @Test
-    void registerSuccess() throws DataAccessException {
+    void registerSuccess() throws DataAccessException, BadRequestException {
         String username = "toby123";
 
         Assertions.assertEquals(username,

@@ -1,22 +1,66 @@
 package server;
 
+import com.google.gson.Gson;
+import dataaccess.*;
+import dataaccess.exception.AlreadyTakenException;
+import dataaccess.exception.BadRequestException;
+import dataaccess.exception.DataAccessException;
 import io.javalin.*;
+import io.javalin.http.Context;
+import io.javalin.http.UnauthorizedResponse;
+import org.jetbrains.annotations.NotNull;
+import service.ClearService;
 import service.UserService;
+import service.params.RegisterRequest;
 
 public class Server {
+    private UserDAO userDAO;
+    private GameDAO gameDAO;
+    private AuthDAO authDAO;
+
+    private UserService userService;
+    private ClearService clearService;
 
     private final Javalin javalin;
-    private UserService userService;
 
     public Server() {
-        userService = new UserService();
+        initializeDAOs();
+        initializeServices(userDAO, gameDAO, authDAO);
 
         javalin = Javalin.create(config -> config.staticFiles.add("web"))
-                .post("/user", new RegisterHandler(userService))
+                .delete("/db", ctx -> clearService.clear() )
+                .post("/user", new RegisterHandler(userService) )
                 .post("/session", new LoginHandler(userService) )
-                .exception();
+                .exception(Exception.class, new ExceptionHandler() )
+                .exception(BadRequestException.class, (e, ctx) -> {
+                    ctx.status(400);
+                    ctx.json("{ \"message\": \"Error: bad request\" }");
+                })
+                .exception(UnauthorizedResponse.class, (e, ctx) -> {
+                    ctx.status(401);
+                    ctx.json("{ \"message\": \"Error: unauthorized\" }");
+                })
+                .exception(AlreadyTakenException.class, (e, ctx) -> {
+                    ctx.status(403);
+                    ctx.json("{ \"message\": \"Error: already taken\" }");
+                })
+                .exception(Exception.class, (e, ctx) -> {
+                    ctx.status(500);
+                    ctx.json("{ \"message\": \"Error: " + e.getMessage() + "\" }");
+                });
 
-        // Register your endpoints and exception handlers here.
+
+    }
+
+    private void initializeDAOs() {
+        userDAO = new MemoryUserDAO();
+        gameDAO = new MemoryGameDAO();
+        authDAO = new MemoryAuthDAO();
+    }
+
+    private void initializeServices(UserDAO userDAO, GameDAO gameDAO, AuthDAO authDAO){
+        userService = new UserService(userDAO, authDAO);
+        clearService = new ClearService(userDAO, gameDAO, authDAO);
     }
 
     public int run(int desiredPort) {
