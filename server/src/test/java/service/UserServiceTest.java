@@ -4,11 +4,13 @@ import dataaccess.*;
 import dataaccess.exception.AlreadyTakenException;
 import dataaccess.exception.BadRequestException;
 import dataaccess.exception.DataAccessException;
+import io.javalin.http.UnauthorizedResponse;
 import model.AuthData;
 import model.UserData;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import service.params.LoginRequest;
 import service.params.RegisterRequest;
 
 public class UserServiceTest {
@@ -43,14 +45,22 @@ public class UserServiceTest {
 
 
     @Test
-    void loginNonExistentUser(){
-
+    void loginInvalidUsername() {
+        String username = "";
+        Assertions.assertThrows(BadRequestException.class, () ->
+                userService.login(new LoginRequest(username, "secret")));
     }
 
     @Test
-    void loginSuccess() throws DataAccessException {
+    void loginNonExistentUser() {
+        Assertions.assertThrows(UnauthorizedResponse.class, () ->
+                userService.login(new LoginRequest("username", null)));
+    }
 
-
+    @Test
+    void loginSuccess() throws DataAccessException, BadRequestException {
+        Assertions.assertEquals("ben",
+                userService.login(new LoginRequest("ben", "abc")).username());
     }
 
 }

@@ -37,7 +37,7 @@ public class UserService {
         }
         else { // username isn't in system yet
             String password = registerRequest.password();
-            if (password == null) { // no password given for user
+            if ( password == null || password.isBlank() ) { // no password given for user
                 throw new BadRequestException("Error: a password is required!");
             }
             else{
@@ -50,18 +50,27 @@ public class UserService {
 
     public AuthData login(LoginRequest loginRequest) throws DataAccessException, BadRequestException {
         String username = loginRequest.username();
-        if (username == null || username.isBlank() ){
+        if (username == null || username.isBlank() ){ // not a valid username
             throw new BadRequestException("Error: a username is required to login!");
         }
-        var userData = userDAO.getUser(username);
 
-        if ( loginRequest.password().equals(userData.password()) ){
+        var userData = userDAO.getUser(username);
+        if ( userData == null ){ // No such user exists
+            throw new UnauthorizedResponse("Error: invalid username");
+        }
+
+
+        String givenPassword = loginRequest.password();
+        if ( givenPassword == null || givenPassword.isBlank() ) { // No given password
+            throw new BadRequestException("Error: no password given");
+        }
+        if ( !givenPassword.equals(userData.password()) ) { // Password Fail - Unauthorized
+            throw new UnauthorizedResponse("Error: invalid password");
+        }
+        else { // Password Success
             String authToken = authDAO.createAuth(username).authToken();
 
             return new AuthData(username, authToken);
-        }
-        else { // Password Fail - Unauthorized
-            throw new UnauthorizedResponse();
         }
     }
 
