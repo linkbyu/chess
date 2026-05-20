@@ -28,7 +28,9 @@ public class PawnMovesCalc implements PieceMovesCalc{
                 if ( onPromotionSpot(teamColor, forwardRow) ){ // check if it's a promotionSpot
                     promotion(myPosition, pendingSquare, results);
                 }
-                else results.add(new ChessMove(myPosition, pendingSquare, null));
+                else {
+                    results.add(new ChessMove(myPosition, pendingSquare, null));
+                }
 
 
                 // Option to move 2 squares ahead at the start of the game
@@ -87,11 +89,14 @@ public class PawnMovesCalc implements PieceMovesCalc{
             var pendingSquare = new ChessPosition(row, col);
             var pendingPiece = board.getPiece(pendingSquare);
 
-            if ( (pendingPiece != null) && opposingTeamsCheck(teamColor, pendingPiece) ){ // If there's an enemy Piece on a diagonal Square, add capturing as an available move
+            if ( (pendingPiece != null) && opposingTeamsCheck(teamColor, pendingPiece) ){
+                // If there's an enemy Piece on a diagonal Square, add capturing as an available move
                 if ( onPromotionSpot(teamColor, row) ){ // check if it's a promotionSpot
                     promotion(myPosition, pendingSquare, results);
                 }
-                else results.add(new ChessMove(myPosition, pendingSquare, null));
+                else {
+                    results.add(new ChessMove(myPosition, pendingSquare, null));
+                }
             }
         }
     }

@@ -17,10 +17,6 @@ public class ChessBoard implements Cloneable {
         
     }
 
-    /*public ChessPiece[][] getSquares() {
-        return squares;
-    }*/
-
     /**
      * Adds a chess piece to the chessboard
      *
@@ -130,8 +126,9 @@ public class ChessBoard implements Cloneable {
                 for (int colNum = 1; colNum < 9; colNum++){
                     ChessPiece piece = squares[rowNum - 1][colNum - 1];
 
-                    if (piece != null)
+                    if (piece != null) {
                         clonedSquares[rowNum - 1][colNum - 1] = piece.clone();
+                    }
                 }
             }
             clonedBoard.squares = clonedSquares;

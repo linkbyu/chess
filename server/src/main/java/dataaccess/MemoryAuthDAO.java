@@ -4,6 +4,7 @@ import model.AuthData;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.UUID;
 
 public class MemoryAuthDAO implements AuthDAO{
     private final Collection<AuthData> authList;
@@ -14,12 +15,16 @@ public class MemoryAuthDAO implements AuthDAO{
 
 
     @Override
-    public void addAuth(AuthData auth) throws DataAccessException {
+    public AuthData createAuth(String username){
+        String authToken = UUID.randomUUID().toString();
+        var auth = new AuthData(authToken, username);
+
         authList.add(auth);
+        return auth;
     }
 
     @Override
-    public AuthData getAuth(String authToken) throws DataAccessException {
+    public AuthData getAuth(String authToken){
         for (AuthData auth : authList){
             if ( authToken.equals(auth.authToken()) ){
                 return auth;
@@ -29,13 +34,13 @@ public class MemoryAuthDAO implements AuthDAO{
     }
 
     @Override
-    public void deleteAuth(String authToken) throws DataAccessException {
+    public void deleteAuth(String authToken){
         AuthData oldAuth = getAuth(authToken);
         authList.remove(oldAuth);
     }
 
     @Override
-    public void clear() throws DataAccessException {
+    public void clear(){
         authList.clear();
     }
 }

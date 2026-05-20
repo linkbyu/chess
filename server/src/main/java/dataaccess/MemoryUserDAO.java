@@ -20,7 +20,7 @@ public class MemoryUserDAO implements UserDAO{
     }
 
     @Override
-    public UserData getUser(String username) throws DataAccessException {
+    public UserData getUser(String username) throws UserNullException {
         try{
             for (UserData u : userList){
                 if ( username.equals(u.username()) ){
@@ -28,7 +28,7 @@ public class MemoryUserDAO implements UserDAO{
                 }
             }
         } catch (Exception e) {
-            throw new DataAccessException("Could not get User", e);
+            throw new UserNullException("User not found!", e);
         }
         return null;
     }
@@ -41,5 +41,10 @@ public class MemoryUserDAO implements UserDAO{
     @Override
     public void deleteUser(String username) throws DataAccessException {
         userList.remove(getUser(username));
+    }
+
+    @Override
+    public void clear() throws DataAccessException {
+        userList.clear();
     }
 }
