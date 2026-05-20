@@ -1,5 +1,7 @@
 package dataaccess;
 
+import dataaccess.exception.DataAccessException;
+import dataaccess.exception.UserNullException;
 import model.UserData;
 
 import java.util.ArrayList;
@@ -15,7 +17,7 @@ public class MemoryUserDAO implements UserDAO{
 
 
     @Override
-    public void insertUser(UserData u) throws DataAccessException {
+    public void addUser(UserData u) throws DataAccessException {
         userList.add(u);
     }
 
