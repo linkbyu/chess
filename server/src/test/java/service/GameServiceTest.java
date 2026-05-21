@@ -36,7 +36,10 @@ public class GameServiceTest {
 
         var games = gameService.listGames();
         Assertions.assertFalse( games.isEmpty() );
-
+        // Note: Uses findGame() to connect our gameIDs to the actual GameData objects
+        Assertions.assertTrue( games.contains(gameService.findGame(gameID1)) );
+        Assertions.assertTrue( games.contains(gameService.findGame(gameID2)) );
+        Assertions.assertTrue( games.contains(gameService.findGame(gameID3)) );
     }
 
     @Test
@@ -49,14 +52,17 @@ public class GameServiceTest {
     @Test
     void createGameSuccess() throws DataAccessException, BadRequestException {
         String gameName = "practice";
-        var gameID = gameService.createGame(new CreateRequest(gameName));
+        int gameID = gameService.createGame(new CreateRequest(gameName));
 
-
+        var games = gameService.listGames();
+        Assertions.assertFalse( games.isEmpty() );
+        GameData game = gameService.findGame(gameID);
+        Assertions.assertEquals( gameID, game.gameID() );
     }
 
     @Test
     void findNonexistentGame(){
-        Assertions.assertThrows(DataAccessException.class, () ->
+        Assertions.assertThrows(BadRequestException.class, () ->
                 gameService.findGame(123));
     }
 
@@ -66,7 +72,7 @@ public class GameServiceTest {
         gameService.createGame(new CreateRequest("glhf"));
 
         String gameName = "practice";
-        var gameID = gameService.createGame(new CreateRequest(gameName));
+        int gameID = gameService.createGame(new CreateRequest(gameName));
 
         GameData game = gameService.findGame(gameID);
         Assertions.assertEquals( gameName, game.gameName() );
@@ -78,7 +84,7 @@ public class GameServiceTest {
 
     @Test
     void joinTeamAlreadyTaken() throws BadRequestException, DataAccessException {
-        var gameID = gameService.createGame(new CreateRequest("practice"));
+        int gameID = gameService.createGame(new CreateRequest("practice"));
 
         String originalUsername = "joe";
         gameService.joinGame(new JoinRequest(WHITE, gameID), originalUsername);
@@ -96,7 +102,7 @@ public class GameServiceTest {
 
     @Test
     void joinOneGameSuccess() throws BadRequestException, DataAccessException {
-        var gameID = gameService.createGame(new CreateRequest("practice"));
+        int gameID = gameService.createGame(new CreateRequest("practice"));
 
         String username = "joe";
         gameService.joinGame(new JoinRequest(WHITE, gameID), username);

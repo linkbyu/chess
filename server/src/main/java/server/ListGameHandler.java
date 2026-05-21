@@ -1,5 +1,6 @@
 package server;
 
+import com.google.gson.*;
 import io.javalin.http.Context;
 import io.javalin.http.Handler;
 import model.GameData;
@@ -8,6 +9,7 @@ import service.GameService;
 import service.UserService;
 
 import java.util.Collection;
+import java.util.Map;
 
 public class ListGameHandler implements Handler {
     private final UserService userService;
@@ -24,29 +26,7 @@ public class ListGameHandler implements Handler {
         userService.verifyAuth(authToken);
 
         Collection<GameData> games = gameService.listGames();
-        var builder = new StringBuilder();
-        builder.append("{ \"games\": [");
-        if (!games.isEmpty()) {
-            for (GameData game : games) {
-                /*
-                builder.append("[{\"gameID\": ");
-                builder.append(game.gameID());
-
-                builder.append(", \"whiteUsername\":");
-                builder.append(game.whiteUsername());
-
-                builder.append(", \"blackUsername\":");
-                builder.append(game.blackUsername());
-
-                builder.append(", \"gameName:");
-                builder.append(game.gameName());
-                builder.append("} ]");
-                */
-                builder.append(game.toString());
-            }
-        }
-
-        builder.append(" ]}");
-        context.json(builder.toString());
+        var result = Map.of("games", games);
+        context.json(new Gson().toJson(result));
     }
 }
