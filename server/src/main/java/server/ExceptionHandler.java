@@ -14,15 +14,15 @@ public class ExceptionHandler implements io.javalin.http.ExceptionHandler<Except
         builder.append("{ \"message\": \"Error: ");
 
         switch(e) {
-            case BadRequestException _:
+            case BadRequestException badE:
                 ctx.status(400);
                 builder.append("bad request");
                 break;
-            case UnauthorizedException _:
+            case UnauthorizedException bad:
                 ctx.status(401);
                 builder.append("unauthorized");
                 break;
-            case AlreadyTakenException _:
+            case AlreadyTakenException bad:
                 ctx.status(403);
                 builder.append("already taken");
                 break;

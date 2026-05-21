@@ -64,4 +64,14 @@ public class UserServiceTest {
                 userService.login(new LoginRequest("ben", "abc")).username());
     }
 
+    @Test
+    void logoutSuccess() throws BadRequestException, DataAccessException {
+        AuthData auth = userService.register(new RegisterRequest("paul5", "abc", "laa@gmail.com"));
+        String authToken = auth.authToken();
+        userService.logout(authToken);
+
+        Assertions.assertThrows(UnauthorizedException.class, () ->
+                userService.verifyAuth(authToken));
+    }
+
 }
