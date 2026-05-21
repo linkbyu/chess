@@ -18,7 +18,7 @@ public class ExceptionHandler implements io.javalin.http.ExceptionHandler<Except
                 ctx.status(400);
                 builder.append("bad request");
                 break;
-            case UnauthorizedException bad:
+            case UnauthorizedException badE:
                 ctx.status(401);
                 builder.append("unauthorized");
                 break;
