@@ -1,17 +1,11 @@
 package server;
 
-import com.google.gson.Gson;
 import dataaccess.*;
-import dataaccess.exception.AlreadyTakenException;
-import dataaccess.exception.BadRequestException;
-import dataaccess.exception.DataAccessException;
 import io.javalin.*;
 import io.javalin.http.Context;
-import io.javalin.http.UnauthorizedResponse;
-import org.jetbrains.annotations.NotNull;
 import service.ClearService;
+import service.GameService;
 import service.UserService;
-import service.params.RegisterRequest;
 
 public class Server {
     private UserDAO userDAO;
@@ -19,6 +13,7 @@ public class Server {
     private AuthDAO authDAO;
 
     private UserService userService;
+    private GameService gameService;
     private ClearService clearService;
 
     private final Javalin javalin;
@@ -32,7 +27,9 @@ public class Server {
                 .post("/user", new RegisterHandler(userService) )
                 .post("/session", new LoginHandler(userService) )
                 .delete("/session", new LogoutHandler(userService) )
-                .post("/game", new CreateGameHandler(gameDAO) )
+                .get("/game", new ListGameHandler(userService, gameService) )
+                .post("/game", new CreateGameHandler(userService, gameService) )
+                .put("/game", new JoinGameHandler(userService, gameService) )
                 .exception(Exception.class, new ExceptionHandler() );
 
 
@@ -46,6 +43,7 @@ public class Server {
 
     private void initializeServices(UserDAO userDAO, GameDAO gameDAO, AuthDAO authDAO){
         userService = new UserService(userDAO, authDAO);
+        gameService = new GameService(userDAO, gameDAO);
         clearService = new ClearService(userDAO, gameDAO, authDAO);
     }
 
