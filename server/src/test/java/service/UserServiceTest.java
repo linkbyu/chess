@@ -5,9 +5,7 @@ import dataaccess.exception.AlreadyTakenException;
 import dataaccess.exception.BadRequestException;
 import dataaccess.exception.DataAccessException;
 import dataaccess.exception.UnauthorizedException;
-import io.javalin.http.UnauthorizedResponse;
 import model.AuthData;
-import model.UserData;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -62,6 +60,19 @@ public class UserServiceTest {
     void loginSuccess() throws DataAccessException, BadRequestException, UnauthorizedException {
         Assertions.assertEquals("ben",
                 userService.login(new LoginRequest("ben", "abc")).username());
+    }
+
+    @Test
+    void verifyInvalidAuth(){
+        Assertions.assertThrows(UnauthorizedException.class, () ->
+                userService.verifyAuth("pleaseletmeinIwannaplaychess"));
+    }
+
+    @Test
+    void verifyAuthSuccess() throws BadRequestException, DataAccessException, UnauthorizedException {
+        var authData = userService.register(new RegisterRequest("paul5", "abc", "laa@gmail.com"));
+        String authToken = authData.authToken();
+        Assertions.assertEquals(userService.verifyAuth(authToken), authData);
     }
 
     @Test
