@@ -1,18 +1,15 @@
 package service;
 
 
-import dataaccess.MemoryAuthDAO;
-import dataaccess.MemoryUserDAO;
 import dataaccess.exception.AlreadyTakenException;
 import dataaccess.exception.BadRequestException;
 import dataaccess.exception.DataAccessException;
 import dataaccess.UserDAO;
 import dataaccess.AuthDAO;
-import io.javalin.http.UnauthorizedResponse;
+import dataaccess.exception.UnauthorizedException;
 import model.AuthData;
 import model.UserData;
 import service.params.LoginRequest;
-import service.params.LoginResult;
 import service.params.RegisterRequest;
 
 
@@ -48,7 +45,8 @@ public class UserService {
     }
 
 
-    public AuthData login(LoginRequest loginRequest) throws DataAccessException, BadRequestException {
+    public AuthData login(LoginRequest loginRequest)
+            throws DataAccessException, BadRequestException, UnauthorizedException {
         String username = loginRequest.username();
         if (username == null || username.isBlank() ){ // not a valid username
             throw new BadRequestException("Error: a username is required to login!");
@@ -56,7 +54,7 @@ public class UserService {
 
         var userData = userDAO.getUser(username);
         if ( userData == null ){ // No such user exists
-            throw new UnauthorizedResponse("Error: invalid username");
+            throw new UnauthorizedException("Error: invalid username");
         }
 
 
@@ -65,13 +63,24 @@ public class UserService {
             throw new BadRequestException("Error: no password given");
         }
         if ( !givenPassword.equals(userData.password()) ) { // Password Fail - Unauthorized
-            throw new UnauthorizedResponse("Error: invalid password");
+            throw new UnauthorizedException("Error: invalid password");
         }
         else { // Password Success
             String authToken = authDAO.createAuth(username).authToken();
 
             return new AuthData(username, authToken);
         }
+    }
+
+    public void verifyAuth(String authToken) throws DataAccessException, UnauthorizedException {
+        AuthData authData = authDAO.getAuth(authToken);
+        if (authData == null){
+            throw new UnauthorizedException("Error: Authorization doesn't exist");
+        }
+    }
+
+    public void logout(String authToken) throws DataAccessException {
+        authDAO.deleteAuth(authToken);
     }
 
 

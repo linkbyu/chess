@@ -4,6 +4,7 @@ import dataaccess.*;
 import dataaccess.exception.AlreadyTakenException;
 import dataaccess.exception.BadRequestException;
 import dataaccess.exception.DataAccessException;
+import dataaccess.exception.UnauthorizedException;
 import io.javalin.http.UnauthorizedResponse;
 import model.AuthData;
 import model.UserData;
@@ -58,7 +59,7 @@ public class UserServiceTest {
     }
 
     @Test
-    void loginSuccess() throws DataAccessException, BadRequestException {
+    void loginSuccess() throws DataAccessException, BadRequestException, UnauthorizedException {
         Assertions.assertEquals("ben",
                 userService.login(new LoginRequest("ben", "abc")).username());
     }

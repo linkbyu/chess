@@ -31,6 +31,8 @@ public class Server {
                 .delete("/db", ctx -> clearService.clear() )
                 .post("/user", new RegisterHandler(userService) )
                 .post("/session", new LoginHandler(userService) )
+                .delete("/session", new LogoutHandler(userService) )
+                .post("/game", new CreateGameHandler(gameDAO) )
                 .exception(Exception.class, new ExceptionHandler() );
 
 

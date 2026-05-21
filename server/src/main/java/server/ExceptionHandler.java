@@ -2,8 +2,8 @@ package server;
 
 import dataaccess.exception.AlreadyTakenException;
 import dataaccess.exception.BadRequestException;
+import dataaccess.exception.UnauthorizedException;
 import io.javalin.http.Context;
-import io.javalin.http.UnauthorizedResponse;
 import org.jetbrains.annotations.NotNull;
 
 public class ExceptionHandler implements io.javalin.http.ExceptionHandler<Exception> {
@@ -18,7 +18,7 @@ public class ExceptionHandler implements io.javalin.http.ExceptionHandler<Except
                 ctx.status(400);
                 builder.append("bad request");
                 break;
-            case UnauthorizedResponse _:
+            case UnauthorizedException _:
                 ctx.status(401);
                 builder.append("unauthorized");
                 break;
