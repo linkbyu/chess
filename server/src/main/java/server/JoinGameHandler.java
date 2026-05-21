@@ -1,10 +1,13 @@
 package server;
 
+import com.google.gson.Gson;
 import io.javalin.http.Context;
 import io.javalin.http.Handler;
+import model.AuthData;
 import org.jetbrains.annotations.NotNull;
 import service.GameService;
 import service.UserService;
+import service.params.JoinRequest;
 
 public class JoinGameHandler implements Handler {
     private final UserService userService;
@@ -17,6 +20,12 @@ public class JoinGameHandler implements Handler {
 
     @Override
     public void handle(@NotNull Context context) throws Exception {
+        String authToken = context.header("authorization");
+        AuthData authData = userService.verifyAuth(authToken);
 
+        var joinRequest = new Gson().fromJson(context.body(), JoinRequest.class);
+        gameService.joinGame(joinRequest, authData.username());
+
+        context.json("{}");
     }
 }

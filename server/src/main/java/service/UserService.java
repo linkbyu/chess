@@ -72,11 +72,12 @@ public class UserService {
         }
     }
 
-    public void verifyAuth(String authToken) throws DataAccessException, UnauthorizedException {
+    public AuthData verifyAuth(String authToken) throws DataAccessException, UnauthorizedException {
         AuthData authData = authDAO.getAuth(authToken);
         if (authData == null){
             throw new UnauthorizedException("Error: Authorization doesn't exist");
         }
+        return authData;
     }
 
     public void logout(String authToken) throws DataAccessException {

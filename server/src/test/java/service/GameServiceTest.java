@@ -3,6 +3,7 @@ package service;
 import chess.ChessGame;
 import dataaccess.MemoryGameDAO;
 import dataaccess.MemoryUserDAO;
+import dataaccess.exception.AlreadyTakenException;
 import dataaccess.exception.BadRequestException;
 import dataaccess.exception.DataAccessException;
 import model.GameData;
@@ -10,6 +11,9 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import service.params.CreateRequest;
+import service.params.JoinRequest;
+
+import static chess.ChessGame.TeamColor.WHITE;
 
 public class GameServiceTest {
     private GameService gameService;
@@ -70,6 +74,38 @@ public class GameServiceTest {
         Assertions.assertNull(game.whiteUsername());
         Assertions.assertNull(game.blackUsername());
         Assertions.assertEquals(new ChessGame(), game.game());
+    }
+
+    @Test
+    void joinTeamAlreadyTaken() throws BadRequestException, DataAccessException {
+        var gameID = gameService.createGame(new CreateRequest("practice"));
+
+        String originalUsername = "joe";
+        gameService.joinGame(new JoinRequest(WHITE, gameID), originalUsername);
+
+        String evilUsername = "evilguy145";
+        Assertions.assertThrows(AlreadyTakenException.class, () ->
+                                gameService.joinGame(new JoinRequest(WHITE, gameID), evilUsername));
+
+        var gameData = gameService.findGame(gameID);
+        Assertions.assertEquals(originalUsername, gameData.whiteUsername());
+        Assertions.assertNull(gameData.blackUsername());
+        Assertions.assertEquals(gameID, gameData.gameID());
+        Assertions.assertEquals(new ChessGame(), gameData.game());
+    }
+
+    @Test
+    void joinOneGameSuccess() throws BadRequestException, DataAccessException {
+        var gameID = gameService.createGame(new CreateRequest("practice"));
+
+        String username = "joe";
+        gameService.joinGame(new JoinRequest(WHITE, gameID), username);
+        var gameData = gameService.findGame(gameID);
+        Assertions.assertEquals(username, gameData.whiteUsername());
+        Assertions.assertNull(gameData.blackUsername());
+        Assertions.assertEquals(gameID, gameData.gameID());
+        Assertions.assertEquals(new ChessGame(), gameData.game());
+
     }
 
 

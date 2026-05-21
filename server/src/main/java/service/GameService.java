@@ -3,10 +3,12 @@ package service;
 import chess.ChessGame;
 import dataaccess.GameDAO;
 import dataaccess.UserDAO;
+import dataaccess.exception.AlreadyTakenException;
 import dataaccess.exception.BadRequestException;
 import dataaccess.exception.DataAccessException;
 import model.GameData;
 import service.params.CreateRequest;
+import service.params.JoinRequest;
 
 import java.util.Collection;
 import java.util.Random;
@@ -26,16 +28,6 @@ public class GameService {
         return gameDAO.listGames();
     }
 
-    public GameData findGame(int gameID) throws DataAccessException {
-        GameData requestedGame = gameDAO.getGame(gameID);
-        if (requestedGame != null){
-            return requestedGame;
-        }
-        else {
-            throw new DataAccessException("Error: requested game does not exist");
-        }
-    }
-
     public int createGame(CreateRequest createRequest)
             throws DataAccessException, BadRequestException {
         String gameName = createRequest.gameName();
@@ -47,6 +39,47 @@ public class GameService {
         gameDAO.addGame(new GameData(gameID, null, null,
                 createRequest.gameName(), new ChessGame()));
         return gameID;
+    }
+
+    public void joinGame(JoinRequest joinRequest, String username)
+            throws DataAccessException, BadRequestException {
+        int gameID = joinRequest.gameID();
+        GameData game = findGame(gameID);
+
+        var requestedTeam = joinRequest.playerColor();
+        if ( requestedTeam == null ){
+            throw new BadRequestException("Error: invalid requested team");
+        }
+        switch( requestedTeam ){
+            case WHITE:
+                if (game.whiteUsername() != null) {
+                    throw new AlreadyTakenException("Error: White team already taken");
+                }
+                else {
+                    gameDAO.updateGame(gameID, new GameData(gameID, username, game.blackUsername(),
+                                                            game.gameName(), game.game()));
+                }
+                break;
+            case BLACK:
+                if (game.blackUsername() != null) {
+                    throw new AlreadyTakenException("Error: Black team already taken");
+                }
+                else {
+                    gameDAO.updateGame(gameID, new GameData(gameID, game.whiteUsername(), username,
+                                                            game.gameName(), game.game()));
+                }
+                break;
+        }
+    }
+
+    public GameData findGame(int gameID) throws DataAccessException, BadRequestException {
+        GameData requestedGame = gameDAO.getGame(gameID);
+        if (requestedGame != null){
+            return requestedGame;
+        }
+        else {
+            throw new BadRequestException("Error: requested game does not exist");
+        }
     }
 
 }
