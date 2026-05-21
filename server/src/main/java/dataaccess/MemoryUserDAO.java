@@ -17,7 +17,7 @@ public class MemoryUserDAO implements UserDAO{
 
 
     @Override
-    public void addUser(UserData u) throws DataAccessException {
+    public void addUser(UserData u) {
         userList.add(u);
     }
 
@@ -33,16 +33,6 @@ public class MemoryUserDAO implements UserDAO{
             throw new UserNullException("User not found!", e);
         }
         return null;
-    }
-
-    @Override
-    public void updateUser(String username, UserData u) throws DataAccessException {
-        // maybe get rid of this?
-    }
-
-    @Override
-    public void deleteUser(String username) throws DataAccessException {
-        userList.remove(getUser(username));
     }
 
     @Override

@@ -54,7 +54,7 @@ public class UserServiceTest {
 
     @Test
     void loginNonExistentUser() {
-        Assertions.assertThrows(UnauthorizedResponse.class, () ->
+        Assertions.assertThrows(UnauthorizedException.class, () ->
                 userService.login(new LoginRequest("username", null)));
     }
 
