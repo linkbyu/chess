@@ -1,8 +1,10 @@
 package server;
 
 import dataaccess.*;
+import dataaccess.MemoryDAOs.MemoryAuthDAO;
+import dataaccess.MemoryDAOs.MemoryGameDAO;
+import dataaccess.MemoryDAOs.MemoryUserDAO;
 import io.javalin.*;
-import io.javalin.http.Context;
 import service.ClearService;
 import service.GameService;
 import service.UserService;

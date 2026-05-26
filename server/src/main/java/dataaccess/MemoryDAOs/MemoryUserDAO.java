@@ -1,5 +1,6 @@
-package dataaccess;
+package dataaccess.MemoryDAOs;
 
+import dataaccess.UserDAO;
 import dataaccess.exception.DataAccessException;
 import dataaccess.exception.UserNullException;
 import model.UserData;
@@ -8,7 +9,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 
-public class MemoryUserDAO implements UserDAO{
+public class MemoryUserDAO implements UserDAO {
     private final Collection<UserData> userList;
 
     public MemoryUserDAO() {

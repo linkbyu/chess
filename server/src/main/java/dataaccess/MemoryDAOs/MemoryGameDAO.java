@@ -1,12 +1,13 @@
-package dataaccess;
+package dataaccess.MemoryDAOs;
 
+import dataaccess.GameDAO;
 import dataaccess.exception.DataAccessException;
 import model.GameData;
 
 import java.util.ArrayList;
 import java.util.Collection;
 
-public class MemoryGameDAO implements GameDAO{
+public class MemoryGameDAO implements GameDAO {
     private final Collection<GameData> gameList;
 
     public MemoryGameDAO() {

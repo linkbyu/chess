@@ -1,12 +1,13 @@
-package dataaccess;
+package dataaccess.MemoryDAOs;
 
+import dataaccess.AuthDAO;
 import model.AuthData;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.UUID;
 
-public class MemoryAuthDAO implements AuthDAO{
+public class MemoryAuthDAO implements AuthDAO {
     private final Collection<AuthData> authList;
 
     public MemoryAuthDAO() {

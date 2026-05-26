@@ -1,6 +1,7 @@
 package service;
 
-import dataaccess.*;
+import dataaccess.MemoryDAOs.MemoryAuthDAO;
+import dataaccess.MemoryDAOs.MemoryUserDAO;
 import dataaccess.exception.AlreadyTakenException;
 import dataaccess.exception.BadRequestException;
 import dataaccess.exception.DataAccessException;
