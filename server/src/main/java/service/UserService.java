@@ -9,6 +9,7 @@ import dataaccess.AuthDAO;
 import dataaccess.exception.UnauthorizedException;
 import model.AuthData;
 import model.UserData;
+import org.mindrot.jbcrypt.BCrypt;
 import service.params.LoginRequest;
 import service.params.RegisterRequest;
 
@@ -62,7 +63,7 @@ public class UserService {
         if ( givenPassword == null || givenPassword.isBlank() ) { // No given password
             throw new BadRequestException("Error: no password given");
         }
-        if ( !givenPassword.equals(userData.password()) ) { // Password Fail - Unauthorized
+        if ( !verifyPassword(username, givenPassword) ) { // Password Fail - Unauthorized
             throw new UnauthorizedException("Error: invalid password");
         }
         else { // Password Success
@@ -70,6 +71,13 @@ public class UserService {
 
             return new AuthData(username, authToken);
         }
+    }
+
+    boolean verifyPassword(String username, String providedClearTextPassword) throws DataAccessException {
+        // read the previously hashed password from the database
+        var hashedPassword = userDAO.getUser(username).password();
+
+        return BCrypt.checkpw(providedClearTextPassword, hashedPassword);
     }
 
     public AuthData verifyAuth(String authToken) throws DataAccessException, UnauthorizedException {

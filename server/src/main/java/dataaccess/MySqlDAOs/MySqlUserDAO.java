@@ -2,36 +2,17 @@ package dataaccess.MySqlDAOs;
 
 import dataaccess.UserDAO;
 import dataaccess.exception.DataAccessException;
-import exception.ResponseException;
+import dataaccess.exception.UserNullException;
 import model.UserData;
+import org.mindrot.jbcrypt.BCrypt;
 
-import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 
-public class MySqlUserDAO implements UserDAO {
+public class MySqlUserDAO extends MySqlDAO implements UserDAO {
 
     public MySqlUserDAO() throws DataAccessException {
-        configureDatabase();
-    }
-
-
-    @Override
-    public void addUser(UserData u) throws DataAccessException {
-
-    }
-
-    @Override
-    public UserData getUser(String username) throws DataAccessException {
-        return null;
-    }
-
-    @Override
-    public void clear() throws DataAccessException {
-        var statement = "TRUNCATE users; TRUNCATE games; TRUNCATE auth";
-        executeUpdate(statement);
-    }
-
-    private void executeUpdate(String statement) {
+        super.configureTables(createStatements);
     }
 
     private final String[] createStatements = {
@@ -41,35 +22,43 @@ public class MySqlUserDAO implements UserDAO {
               `password` varchar(64) NOT NULL,
               `email` varchar(128) NULL,
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
-            """,
-            """
-            CREATE TABLE IF NOT EXISTS  games (
-              `gameID` int NOT NULL PRIMARY KEY AUTO_INCREMENT,
-              `whiteUsername` varchar(32) NOT NULL,
-              `blackUsername` varchar(32) NOT NULL,
-              `gameName` varchar(32) NOT NULL,
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
-            """,
-            """
-            CREATE TABLE IF NOT EXISTS  auth (
-              `username` varchar(32) NOT NULL PRIMARY KEY,
-              `authToken` varchar(64) NOT NULL,
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
             """
     };
 
 
-    private void configureDatabase() throws DataAccessException {
-        DatabaseManager.createDatabase();
-        try (Connection conn = DatabaseManager.getConnection()) {
-            for (String statement : createStatements) {
-                try (var preparedStatement = conn.prepareStatement(statement)) {
-                    preparedStatement.executeUpdate();
-                }
-            }
-        } catch (SQLException ex) {
-            throw new ResponseException(ResponseException.Code.ServerError, String.format("Unable to configure database: %s", ex.getMessage()));
+    @Override
+    public void addUser(UserData u) throws DataAccessException {
+        var statement = "INSERT INTO users (username, password, email) VALUES (?, ?, ?)";
+        String hashedPassword = BCrypt.hashpw(u.password(), BCrypt.gensalt());
+
+        executeUpdate( statement, u.username(), hashedPassword, u.email() );
+    }
+
+    @Override
+    public UserData getUser(String username) throws DataAccessException {
+        var statement = "SELECT username, password, email FROM users WHERE username=?";
+
+        try {
+            return (UserData) executeQuery(statement, username);
+
+        } catch (Exception e) {
+            throw new UserNullException("User not in database!", e);
         }
     }
+
+    @Override
+    protected UserData readObject(ResultSet rs) throws SQLException {
+        var username = rs.getString("username");
+        var password = rs.getString("password");
+        var email = rs.getString("email");
+        return new UserData(username, password, email);
+    }
+
+    @Override
+    public void clear() throws DataAccessException {
+        var statement = "TRUNCATE users";
+        executeUpdate(statement);
+    }
+
 
 }
