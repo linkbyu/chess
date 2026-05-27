@@ -18,10 +18,10 @@ public class MySqlUserDAO extends MySqlDAO implements UserDAO {
     private final String[] createStatements = {
             """
             CREATE TABLE IF NOT EXISTS  users (
-              `username` varchar(32) NOT NULL PRIMARY KEY,
-              `password` varchar(64) NOT NULL,
-              `email` varchar(128) NULL,
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+              username varchar(32) NOT NULL PRIMARY KEY,
+              password varchar(64) NOT NULL,
+              email varchar(128) NULL
+            );
             """
     };
 
@@ -39,7 +39,13 @@ public class MySqlUserDAO extends MySqlDAO implements UserDAO {
         var statement = "SELECT username, password, email FROM users WHERE username=?";
 
         try {
-            return (UserData) executeQuery(statement, username);
+            UserData userData = (UserData) executeQuery(statement, username);
+            if (userData != null){
+                return userData;
+            }
+            else {
+                throw new UserNullException("User not in database!");
+            }
 
         } catch (Exception e) {
             throw new UserNullException("User not in database!", e);

@@ -28,12 +28,12 @@ public abstract class MySqlDAO {
     protected int executeUpdate(String statement, Object... params) throws DataAccessException {
         try (Connection conn = DatabaseManager.getConnection()) {
             try (PreparedStatement ps = conn.prepareStatement(statement, RETURN_GENERATED_KEYS)) {
-                for (int i = 1; i < params.length + 1; i++) {
+                for (int i = 0; i < params.length; i++) {
                     Object param = params[i];
                     switch (param) {
-                        case String p -> ps.setString(i, p);
-                        case Integer p -> ps.setInt(i, p);
-                        case null -> ps.setNull(i, NULL);
+                        case String p -> ps.setString(i + 1, p);
+                        case Integer p -> ps.setInt(i + 1, p);
+                        case null -> ps.setNull(i + 1, NULL);
                         default -> {}
                     }
                 }
@@ -55,9 +55,9 @@ public abstract class MySqlDAO {
     protected Object executeQuery(String statement, Object... queryParams) throws DataAccessException {
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement ps = conn.prepareStatement(statement) ) {
-            for (int i = 1; i < queryParams.length - 1; i++) {
+            for (int i = 0; i < queryParams.length; i++) {
                 Object param = queryParams[i];
-                if (param instanceof String p) ps.setString(i, p);
+                if (param instanceof String p) ps.setString(i + 1, p);
             }
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {

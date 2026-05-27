@@ -89,20 +89,5 @@ public class DatabaseManager {
         }
     }
 
-    public static void closeConnection(Connection conn, boolean commit) throws DataAccessException {
-        try {
-            if (commit){
-                conn.commit();
-            }
-            else {
-                conn.rollback();
-            }
-
-            conn.close();
-        } catch (SQLException e) {
-            throw new DataAccessException("ERROR: closeConnection failed", e);
-        }
-    }
-
 
 }

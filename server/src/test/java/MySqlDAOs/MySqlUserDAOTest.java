@@ -1,44 +1,30 @@
 package MySqlDAOs;
 
-import dataaccess.MySqlDAOs.DatabaseManager;
 import dataaccess.MySqlDAOs.MySqlUserDAO;
 import dataaccess.exception.DataAccessException;
 import model.UserData;
 import org.junit.jupiter.api.*;
 
-import java.sql.Connection;
-import java.sql.SQLException;
 
 public class MySqlUserDAOTest {
-    private Connection conn;
+
     private static MySqlUserDAO userDAO;
 
 
     @BeforeAll
     static void configDatabase() throws DataAccessException {
-        //DatabaseManager.getConnection(true);
         userDAO = new MySqlUserDAO();
-
-        //DatabaseManager.closeConnection(true);
     }
 
     @BeforeEach
     void setUp() throws DataAccessException {
-        conn = DatabaseManager.getConnection(true);
         userDAO.addUser(new UserData("thomas", "winner", null));
     }
 
     @AfterEach
     void cleanUp() throws DataAccessException {
-        DatabaseManager.closeConnection(conn, false);
-        conn = null;
+        userDAO.clear();
     }
-
-    /*@AfterAll
-    static void finish() throws SQLException {
-        DatabaseManager.closeConnection(false);
-    }*/
-
 
 
     @Test
@@ -50,8 +36,27 @@ public class MySqlUserDAOTest {
 
     @Test
     void addUserAlreadyTaken() {
-        Assertions.assertThrows(SQLException.class, () ->
+        Assertions.assertThrows(DataAccessException.class, () ->
                 userDAO.addUser(new UserData("thomas", "duplicate", "duplicate")) );
+    }
+
+    @Test
+    void getUserNull(){
+        Assertions.assertThrows(DataAccessException.class, () ->
+                userDAO.getUser("nonExistent") );
+    }
+
+    @Test
+    void getUserSuccess() throws DataAccessException {
+        Assertions.assertEquals("thomas",
+                userDAO.getUser("thomas").username());
+    }
+
+    @Test
+    void clearUsersSuccess() throws DataAccessException {
+        userDAO.clear();
+        Assertions.assertThrows(DataAccessException.class, () ->
+                userDAO.getUser("thomas") );
     }
 
 
