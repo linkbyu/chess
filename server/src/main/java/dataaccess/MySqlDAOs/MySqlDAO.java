@@ -2,6 +2,7 @@ package dataaccess.MySqlDAOs;
 
 import chess.ChessGame;
 import com.google.gson.Gson;
+import dataaccess.DatabaseManager;
 import dataaccess.exception.DataAccessException;
 
 import java.sql.Connection;

@@ -1,12 +1,9 @@
 package service;
 
 
-import dataaccess.exception.AlreadyTakenException;
-import dataaccess.exception.BadRequestException;
-import dataaccess.exception.DataAccessException;
+import dataaccess.exception.*;
 import dataaccess.UserDAO;
 import dataaccess.AuthDAO;
-import dataaccess.exception.UnauthorizedException;
 import model.AuthData;
 import model.UserData;
 import org.mindrot.jbcrypt.BCrypt;
@@ -54,7 +51,7 @@ public class UserService {
         }
 
         var userData = userDAO.getUser(username);
-        if ( userData == null ){ // No such user exists
+        if (userData == null) { // No such user exists
             throw new UnauthorizedException("Error: invalid username");
         }
 
@@ -75,7 +72,8 @@ public class UserService {
 
     boolean verifyPassword(String username, String providedClearTextPassword) throws DataAccessException {
         // read the previously hashed password from the database
-        var hashedPassword = userDAO.getUser(username).password();
+        var user = userDAO.getUser(username);
+        var hashedPassword = user.password();
 
         return BCrypt.checkpw(providedClearTextPassword, hashedPassword);
     }

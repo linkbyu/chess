@@ -1,4 +1,4 @@
-package dataaccess.MySqlDAOs;
+package dataaccess;
 
 import dataaccess.exception.DataAccessException;
 
@@ -46,7 +46,7 @@ public class DatabaseManager {
     /**
      * Creates the database if it does not already exist.
      */
-    static void createDatabase() throws DataAccessException {
+    public static void createDatabase() throws DataAccessException {
         var statement = "CREATE DATABASE IF NOT EXISTS " + databaseName;
         try (var conn = DriverManager.getConnection(connectionUrl, dbUsername, dbPassword);
              var preparedStatement = conn.prepareStatement(statement)) {
@@ -70,19 +70,10 @@ public class DatabaseManager {
      */
 
     public static Connection getConnection() throws DataAccessException {
-        return getConnection(false);
-    }
-
-    public static Connection getConnection(boolean startTransaction) throws DataAccessException {
         try {
             //do not wrap the following line with a try-with-resources
             var conn = DriverManager.getConnection(connectionUrl, dbUsername, dbPassword);
             conn.setCatalog(databaseName);
-
-            if (startTransaction){
-                conn.setAutoCommit(false);
-            }
-
             return conn;
         } catch (SQLException e) {
             throw new DataAccessException("ERROR: openConnection failed", e);

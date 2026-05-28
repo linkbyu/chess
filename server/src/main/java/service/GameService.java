@@ -28,21 +28,19 @@ public class GameService {
         return gameDAO.listGames();
     }
 
-    public int createGame(CreateRequest createRequest)
-            throws DataAccessException, BadRequestException {
+    public int createGame(CreateRequest createRequest) throws DataAccessException {
         String gameName = createRequest.gameName();
         if ( gameName == null || gameName.isBlank() ){
             throw new BadRequestException("Error: no given game name");
         }
 
         int gameID = abs(new Random().nextInt());
-        gameDAO.addGame(new GameData(gameID, null, null,
+        gameID = gameDAO.addGame(new GameData(gameID, null, null,
                 createRequest.gameName(), new ChessGame()));
         return gameID;
     }
 
-    public void joinGame(JoinRequest joinRequest, String username)
-            throws DataAccessException, BadRequestException {
+    public void joinGame(JoinRequest joinRequest, String username) throws DataAccessException{
         int gameID = joinRequest.gameID();
         GameData game = findGame(gameID);
 
@@ -72,7 +70,7 @@ public class GameService {
         }
     }
 
-    public GameData findGame(int gameID) throws DataAccessException, BadRequestException {
+    public GameData findGame(int gameID) throws DataAccessException {
         GameData requestedGame = gameDAO.getGame(gameID);
         if (requestedGame != null){
             return requestedGame;

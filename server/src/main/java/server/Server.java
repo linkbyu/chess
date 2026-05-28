@@ -4,6 +4,10 @@ import dataaccess.*;
 import dataaccess.MemoryDAOs.MemoryAuthDAO;
 import dataaccess.MemoryDAOs.MemoryGameDAO;
 import dataaccess.MemoryDAOs.MemoryUserDAO;
+import dataaccess.MySqlDAOs.MySqlAuthDAO;
+import dataaccess.MySqlDAOs.MySqlGameDAO;
+import dataaccess.MySqlDAOs.MySqlUserDAO;
+import dataaccess.exception.DataAccessException;
 import io.javalin.*;
 import service.ClearService;
 import service.GameService;
@@ -21,7 +25,11 @@ public class Server {
     private final Javalin javalin;
 
     public Server() {
-        initializeDAOs();
+        try {
+            initializeDAOs();
+        } catch (DataAccessException e) {
+            throw new RuntimeException(e);
+        }
         initializeServices(userDAO, gameDAO, authDAO);
 
         javalin = Javalin.create(config -> config.staticFiles.add("web"))
@@ -37,10 +45,11 @@ public class Server {
 
     }
 
-    private void initializeDAOs() {
-        userDAO = new MemoryUserDAO();
-        gameDAO = new MemoryGameDAO();
-        authDAO = new MemoryAuthDAO();
+    private void initializeDAOs() throws DataAccessException {
+        userDAO = new MySqlUserDAO();
+        gameDAO = new MySqlGameDAO();
+        authDAO = new MySqlAuthDAO();
+
     }
 
     private void initializeServices(UserDAO userDAO, GameDAO gameDAO, AuthDAO authDAO){

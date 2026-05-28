@@ -38,13 +38,7 @@ public class MySqlAuthDAO extends MySqlDAO implements AuthDAO {
         var statement = "SELECT * FROM auth WHERE authToken=?";
 
         try {
-            var authData = (AuthData) executeQuery(statement, authToken );
-            if (authData != null){
-                return authData;
-            }
-            else {
-                throw new DataAccessException("AuthToken does not exist!");
-            }
+            return (AuthData) executeQuery(statement, authToken );
         } catch (Exception e) {
             throw new DataAccessException("AuthToken does not exist!", e);
         }

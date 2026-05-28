@@ -1,8 +1,8 @@
 package dataaccess.MySqlDAOs;
 
 import dataaccess.UserDAO;
+import dataaccess.exception.BadRequestException;
 import dataaccess.exception.DataAccessException;
-import dataaccess.exception.UserNullException;
 import model.UserData;
 import org.mindrot.jbcrypt.BCrypt;
 
@@ -40,15 +40,10 @@ public class MySqlUserDAO extends MySqlDAO implements UserDAO {
 
         try {
             UserData userData = (UserData) executeQuery(statement, username);
-            if (userData != null){
-                return userData;
-            }
-            else {
-                throw new UserNullException("User not in database!");
-            }
+            return userData;
 
         } catch (Exception e) {
-            throw new UserNullException("User not in database!", e);
+            throw new BadRequestException("User not in database!", e);
         }
     }
 

@@ -2,6 +2,7 @@ package dataaccess.MySqlDAOs;
 
 import chess.ChessGame;
 import com.google.gson.Gson;
+import dataaccess.DatabaseManager;
 import dataaccess.GameDAO;
 import dataaccess.exception.DataAccessException;
 import model.GameData;
@@ -46,13 +47,7 @@ public class MySqlGameDAO extends MySqlDAO implements GameDAO {
         var statement = "SELECT * FROM games WHERE gameID=?";
 
         try {
-            var gameData = (GameData) executeQuery(statement, Integer.valueOf(gameID) );
-            if (gameData != null){
-                return gameData;
-            }
-            else {
-                throw new DataAccessException("Game does not exist!");
-            }
+            return (GameData) executeQuery(statement, Integer.valueOf(gameID) );
         } catch (Exception e) {
             throw new DataAccessException("Game does not exist!", e);
         }
@@ -89,8 +84,9 @@ public class MySqlGameDAO extends MySqlDAO implements GameDAO {
     @Override
     public void updateGame(int gameID, GameData newGame) throws DataAccessException {
 
-        var statement = "UPDATE games SET chessGame=? WHERE gameID=?";
-        executeUpdate(statement, newGame.game(), Integer.valueOf(gameID) );
+        var statement = "UPDATE games SET whiteUsername=?, blackUsername=?, chessGame=? WHERE gameID=?";
+        executeUpdate(statement, newGame.whiteUsername(), newGame.blackUsername(),
+                      newGame.game(), Integer.valueOf(gameID) );
     }
 
     @Override
