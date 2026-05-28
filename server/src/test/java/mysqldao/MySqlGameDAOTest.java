@@ -1,4 +1,4 @@
-package MySqlDAOs;
+package mysqldao;
 
 import chess.ChessGame;
 import chess.ChessMove;
