@@ -34,8 +34,7 @@ public class GameService {
             throw new BadRequestException("Error: no given game name");
         }
 
-        int gameID = abs(new Random().nextInt());
-        gameID = gameDAO.addGame(new GameData(gameID, null, null,
+        int gameID = gameDAO.addGame(new GameData(1, null, null,
                 createRequest.gameName(), new ChessGame()));
         return gameID;
     }

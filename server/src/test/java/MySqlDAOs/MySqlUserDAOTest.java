@@ -41,9 +41,8 @@ public class MySqlUserDAOTest {
     }
 
     @Test
-    void getUserNull(){
-        Assertions.assertThrows(DataAccessException.class, () ->
-                userDAO.getUser("nonExistent") );
+    void getUserNull() throws DataAccessException {
+        Assertions.assertNull(userDAO.getUser("nonExistent") );
     }
 
     @Test
@@ -55,8 +54,7 @@ public class MySqlUserDAOTest {
     @Test
     void clearUsersSuccess() throws DataAccessException {
         userDAO.clear();
-        Assertions.assertThrows(DataAccessException.class, () ->
-                userDAO.getUser("thomas") );
+        Assertions.assertNull(userDAO.getUser("thomas") );
     }
 
 

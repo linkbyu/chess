@@ -1,26 +1,48 @@
 package service;
 
-import dataaccess.MemoryDAOs.MemoryAuthDAO;
-import dataaccess.MemoryDAOs.MemoryUserDAO;
+import dataaccess.AuthDAO;
+import dataaccess.GameDAO;
+import dataaccess.MySqlDAOs.MySqlAuthDAO;
+import dataaccess.MySqlDAOs.MySqlGameDAO;
+import dataaccess.MySqlDAOs.MySqlUserDAO;
+import dataaccess.UserDAO;
 import dataaccess.exception.AlreadyTakenException;
 import dataaccess.exception.BadRequestException;
 import dataaccess.exception.DataAccessException;
 import dataaccess.exception.UnauthorizedException;
 import model.AuthData;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import service.params.LoginRequest;
 import service.params.RegisterRequest;
 
+
 public class UserServiceTest {
-    private UserService userService;
+    private static UserDAO userDAO;
+    private static GameDAO gameDAO;
+    private static AuthDAO authDAO;
+
+    private static UserService userService;
+    private static ClearService clearService;
+
+
+    @BeforeAll
+    static void configureService() throws DataAccessException {
+        userDAO = new MySqlUserDAO();
+        gameDAO = new MySqlGameDAO();
+        authDAO = new MySqlAuthDAO();
+
+        userService = new UserService(userDAO, authDAO);
+        clearService = new ClearService(userDAO, gameDAO, authDAO);
+    }
 
     @BeforeEach
-    void setUp() throws DataAccessException, BadRequestException {
-        userService = new UserService(new MemoryUserDAO(), new MemoryAuthDAO());
-
+    void setUp() throws DataAccessException {
         userService.register(new RegisterRequest("ben", "abc", "laa@gmail.com"));
+    }
+
+    @AfterEach
+    void cleanUp() throws DataAccessException {
+        clearService.clear();
     }
 
     @Test

@@ -48,9 +48,8 @@ public class MySqlAuthDAOTest {
     }
 
     @Test
-    void getAuthNull(){
-        Assertions.assertThrows(DataAccessException.class, () ->
-                authDAO.getAuth("abcdefghijklmnop"));
+    void getAuthNull() throws DataAccessException {
+        Assertions.assertNull(authDAO.getAuth("abcdefghijklmnop"));
     }
 
     @Test
@@ -65,15 +64,13 @@ public class MySqlAuthDAOTest {
     void deleteAuthSuccess() throws DataAccessException {
         authDAO.deleteAuth(exampleAuth.authToken());
 
-        Assertions.assertThrows(DataAccessException.class, () ->
-                authDAO.getAuth(exampleAuth.authToken()));
+        Assertions.assertNull(authDAO.getAuth(exampleAuth.authToken()) );
     }
 
     @Test
     void clearAuth() throws DataAccessException {
         authDAO.clear();
-        Assertions.assertThrows(DataAccessException.class, () ->
-                authDAO.getAuth(exampleAuth.authToken()) );
+        Assertions.assertNull(authDAO.getAuth(exampleAuth.authToken()) );
     }
 
 }

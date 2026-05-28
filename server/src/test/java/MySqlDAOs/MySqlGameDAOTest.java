@@ -52,8 +52,8 @@ public class MySqlGameDAOTest {
     }
 
     @Test
-    void getGameNull() {
-        Assertions.assertThrows(DataAccessException.class, () -> gameDAO.getGame(10) );
+    void getGameNull() throws DataAccessException {
+        Assertions.assertNull(gameDAO.getGame(10) );
     }
 
     @Test
@@ -103,14 +103,14 @@ public class MySqlGameDAOTest {
     void updateGameSuccess() throws InvalidMoveException, DataAccessException {
         var newGame = new ChessGame();
         newGame.makeMove(new ChessMove(new ChessPosition(2, 1), new ChessPosition(3, 1), null));
-        gameDAO.updateGame(1, new GameData(1, null, null,
+        gameDAO.updateGame(1, new GameData(1, "joe", "tom",
                 "BringIt", newGame));
 
         var gameList = gameDAO.listGames();
         var foundGame = gameList.getFirst();
         Assertions.assertEquals(1, foundGame.gameID());
         Assertions.assertEquals("joe", foundGame.whiteUsername());
-        Assertions.assertNull(foundGame.blackUsername());
+        Assertions.assertEquals("tom", foundGame.blackUsername());
         Assertions.assertEquals("BringIt", foundGame.gameName());
         Assertions.assertEquals(newGame, foundGame.game() );
     }
@@ -130,15 +130,13 @@ public class MySqlGameDAOTest {
     @Test
     void deleteGameSuccess() throws DataAccessException {
         gameDAO.deleteGame(1);
-        Assertions.assertThrows(DataAccessException.class, () ->
-                gameDAO.getGame(1) );
+        Assertions.assertNull(gameDAO.getGame(1) );;
     }
 
     @Test
     void clearGamesSuccess() throws DataAccessException {
         gameDAO.clear();
-        Assertions.assertThrows(DataAccessException.class, () ->
-                gameDAO.getGame(1) );
+        Assertions.assertNull(gameDAO.getGame(1) );
     }
 
 }

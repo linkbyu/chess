@@ -1,26 +1,47 @@
 package service;
 
 import chess.ChessGame;
+import dataaccess.AuthDAO;
+import dataaccess.GameDAO;
 import dataaccess.MemoryDAOs.MemoryGameDAO;
 import dataaccess.MemoryDAOs.MemoryUserDAO;
+import dataaccess.MySqlDAOs.MySqlAuthDAO;
+import dataaccess.MySqlDAOs.MySqlGameDAO;
+import dataaccess.MySqlDAOs.MySqlUserDAO;
+import dataaccess.UserDAO;
 import dataaccess.exception.AlreadyTakenException;
 import dataaccess.exception.BadRequestException;
 import dataaccess.exception.DataAccessException;
 import model.GameData;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import service.params.CreateRequest;
 import service.params.JoinRequest;
 
 import static chess.ChessGame.TeamColor.WHITE;
 
 public class GameServiceTest {
-    private GameService gameService;
+    private static UserDAO userDAO;
+    private static GameDAO gameDAO;
+    private static AuthDAO authDAO;
 
-    @BeforeEach
-    void setUp(){
-        gameService = new GameService(new MemoryUserDAO(), new MemoryGameDAO());
+    private static GameService gameService;
+    private static ClearService clearService;
+
+
+    @BeforeAll
+    static void configureService() throws DataAccessException {
+        userDAO = new MySqlUserDAO();
+        gameDAO = new MySqlGameDAO();
+        authDAO = new MySqlAuthDAO();
+
+        clearService = new ClearService(userDAO, gameDAO, authDAO);
+        gameService = new GameService(userDAO, gameDAO);
+    }
+
+
+    @AfterEach
+    void cleanUp() throws DataAccessException {
+        clearService.clear();
     }
 
     @Test

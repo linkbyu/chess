@@ -5,6 +5,9 @@ import dataaccess.*;
 import dataaccess.MemoryDAOs.MemoryAuthDAO;
 import dataaccess.MemoryDAOs.MemoryGameDAO;
 import dataaccess.MemoryDAOs.MemoryUserDAO;
+import dataaccess.MySqlDAOs.MySqlAuthDAO;
+import dataaccess.MySqlDAOs.MySqlGameDAO;
+import dataaccess.MySqlDAOs.MySqlUserDAO;
 import dataaccess.exception.BadRequestException;
 import dataaccess.exception.DataAccessException;
 import dataaccess.exception.UnauthorizedException;
@@ -24,10 +27,10 @@ public class ClearServiceTest {
 
 
     @BeforeEach
-    void setUp(){
-        UserDAO userDAO = new MemoryUserDAO();
-        GameDAO gameDAO = new MemoryGameDAO();
-        AuthDAO authDAO = new MemoryAuthDAO();
+    void setUp() throws DataAccessException {
+        UserDAO userDAO = new MySqlUserDAO();
+        GameDAO gameDAO = new MySqlGameDAO();
+        AuthDAO authDAO = new MySqlAuthDAO();
 
         userService = new UserService(userDAO, authDAO);
         gameService = new GameService(userDAO, gameDAO);
