@@ -76,7 +76,7 @@ public class DatabaseManager {
             conn.setCatalog(databaseName);
             return conn;
         } catch (SQLException e) {
-            throw new DataAccessException("ERROR: openConnection failed", e);
+            throw new DataAccessException("ERROR: getConnection failed", e);
         }
     }
 

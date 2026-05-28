@@ -42,8 +42,8 @@ public class MySqlUserDAO extends MySqlDAO implements UserDAO {
             UserData userData = (UserData) executeQuery(statement, username);
             return userData;
 
-        } catch (Exception e) {
-            throw new BadRequestException("User not in database!", e);
+        } catch (DataAccessException e) {
+            throw new DataAccessException("User not in database!", e);
         }
     }
 
