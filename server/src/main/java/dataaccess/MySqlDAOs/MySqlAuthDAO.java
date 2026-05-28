@@ -3,9 +3,11 @@ package dataaccess.MySqlDAOs;
 import dataaccess.AuthDAO;
 import dataaccess.exception.DataAccessException;
 import model.AuthData;
+import model.GameData;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.UUID;
 
 public class MySqlAuthDAO extends MySqlDAO implements AuthDAO {
 
@@ -16,20 +18,38 @@ public class MySqlAuthDAO extends MySqlDAO implements AuthDAO {
     private final String[] createStatements = {
             """
             CREATE TABLE IF NOT EXISTS  auth (
-              `username` varchar(32) NOT NULL PRIMARY KEY,
-              `authToken` varchar(64) NOT NULL,
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci
+              `username` varchar(32) NOT NULL,
+              `authToken` varchar(64) NOT NULL PRIMARY KEY
+            );
             """
     };
 
     @Override
     public AuthData createAuth(String username) throws DataAccessException {
-        return null;
+        String authToken = UUID.randomUUID().toString();
+
+        var statement = "INSERT INTO auth (username, authToken) VALUES (?, ?)";
+        executeUpdate(statement, username, authToken);
+
+        return new AuthData(username, authToken);
     }
 
     @Override
     public AuthData getAuth(String authToken) throws DataAccessException {
-        return null;
+        var statement = "SELECT * FROM auth WHERE authToken=?";
+
+        try {
+            var authData = (AuthData) executeQuery(statement, authToken );
+            if (authData != null){
+                return authData;
+            }
+            else {
+                throw new DataAccessException("AuthToken does not exist!");
+            }
+        } catch (Exception e) {
+            throw new DataAccessException("AuthToken does not exist!", e);
+        }
+
     }
 
     @Override

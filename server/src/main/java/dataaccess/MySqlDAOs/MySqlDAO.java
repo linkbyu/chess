@@ -1,5 +1,7 @@
 package dataaccess.MySqlDAOs;
 
+import chess.ChessGame;
+import com.google.gson.Gson;
 import dataaccess.exception.DataAccessException;
 
 import java.sql.Connection;
@@ -26,13 +28,17 @@ public abstract class MySqlDAO {
     }
 
     protected int executeUpdate(String statement, Object... params) throws DataAccessException {
-        try (Connection conn = DatabaseManager.getConnection()) {
-            try (PreparedStatement ps = conn.prepareStatement(statement, RETURN_GENERATED_KEYS)) {
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement ps = conn.prepareStatement(statement, RETURN_GENERATED_KEYS)) {
                 for (int i = 0; i < params.length; i++) {
                     Object param = params[i];
                     switch (param) {
                         case String p -> ps.setString(i + 1, p);
                         case Integer p -> ps.setInt(i + 1, p);
+                        case ChessGame p -> {
+                            String json = new Gson().toJson(p);
+                            ps.setString(i + 1, json);
+                        }
                         case null -> ps.setNull(i + 1, NULL);
                         default -> {}
                     }
@@ -45,7 +51,6 @@ public abstract class MySqlDAO {
                 }
 
                 return 0;
-            }
         } catch (SQLException e) {
             throw new DataAccessException(e.getMessage());
         }
@@ -57,7 +62,11 @@ public abstract class MySqlDAO {
              PreparedStatement ps = conn.prepareStatement(statement) ) {
             for (int i = 0; i < queryParams.length; i++) {
                 Object param = queryParams[i];
-                if (param instanceof String p) ps.setString(i + 1, p);
+                switch(param) {
+                    case String p -> ps.setString(i + 1, p);
+                    case Integer p -> ps.setInt(i + 1, p.intValue() );
+                    default -> throw new DataAccessException("Unexpected value: " + param);
+                }
             }
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
