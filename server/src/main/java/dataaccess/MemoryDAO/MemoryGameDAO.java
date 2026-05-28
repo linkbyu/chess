@@ -1,4 +1,4 @@
-package dataaccess.MemoryDAOs;
+package dataaccess.MemoryDAO;
 
 import dataaccess.GameDAO;
 import dataaccess.exception.DataAccessException;

@@ -2,12 +2,9 @@ package service;
 
 import chess.ChessGame;
 import dataaccess.*;
-import dataaccess.MemoryDAOs.MemoryAuthDAO;
-import dataaccess.MemoryDAOs.MemoryGameDAO;
-import dataaccess.MemoryDAOs.MemoryUserDAO;
-import dataaccess.MySqlDAOs.MySqlAuthDAO;
-import dataaccess.MySqlDAOs.MySqlGameDAO;
-import dataaccess.MySqlDAOs.MySqlUserDAO;
+import dataaccess.MySqlDAO.MySqlAuthDAO;
+import dataaccess.MySqlDAO.MySqlGameDAO;
+import dataaccess.MySqlDAO.MySqlUserDAO;
 import dataaccess.exception.BadRequestException;
 import dataaccess.exception.DataAccessException;
 import dataaccess.exception.UnauthorizedException;

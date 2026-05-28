@@ -4,7 +4,7 @@ import chess.ChessGame;
 import chess.ChessMove;
 import chess.ChessPosition;
 import chess.InvalidMoveException;
-import dataaccess.MySqlDAOs.MySqlGameDAO;
+import dataaccess.MySqlDAO.MySqlGameDAO;
 import dataaccess.exception.DataAccessException;
 import model.GameData;
 import org.junit.jupiter.api.*;

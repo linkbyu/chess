@@ -2,9 +2,9 @@ package service;
 
 import dataaccess.AuthDAO;
 import dataaccess.GameDAO;
-import dataaccess.MySqlDAOs.MySqlAuthDAO;
-import dataaccess.MySqlDAOs.MySqlGameDAO;
-import dataaccess.MySqlDAOs.MySqlUserDAO;
+import dataaccess.MySqlDAO.MySqlAuthDAO;
+import dataaccess.MySqlDAO.MySqlGameDAO;
+import dataaccess.MySqlDAO.MySqlUserDAO;
 import dataaccess.UserDAO;
 import dataaccess.exception.AlreadyTakenException;
 import dataaccess.exception.BadRequestException;

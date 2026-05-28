@@ -1,6 +1,6 @@
 package MySqlDAOs;
 
-import dataaccess.MySqlDAOs.MySqlAuthDAO;
+import dataaccess.MySqlDAO.MySqlAuthDAO;
 import dataaccess.exception.DataAccessException;
 import model.AuthData;
 import org.junit.jupiter.api.*;
