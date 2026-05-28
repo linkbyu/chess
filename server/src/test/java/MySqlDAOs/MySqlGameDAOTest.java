@@ -68,8 +68,10 @@ public class MySqlGameDAOTest {
     }
 
     @Test
-    void listGamesEmpty() {
-        //
+    void listGamesEmpty() throws DataAccessException {
+        gameDAO.deleteGame(1);
+        var gameList = gameDAO.listGames();
+        Assertions.assertTrue(gameList.isEmpty());
     }
 
     @Test
@@ -85,10 +87,16 @@ public class MySqlGameDAOTest {
     }
 
     @Test
-    void updateGameNull(){
+    void updateGameNull() throws DataAccessException {
         var newGame = new GameData(10, null, null, "fun", new ChessGame());
-        Assertions.assertThrows(DataAccessException.class, () ->
-                gameDAO.updateGame(10, newGame) );
+        gameDAO.updateGame(10, newGame);
+
+        var foundGame = gameDAO.getGame(1);
+        Assertions.assertEquals(1, foundGame.gameID());
+        Assertions.assertEquals("joe", foundGame.whiteUsername());
+        Assertions.assertNull(foundGame.blackUsername());
+        Assertions.assertEquals("BringIt", foundGame.gameName());
+        Assertions.assertEquals(new ChessGame(), foundGame.game() );
     }
 
     @Test
@@ -108,16 +116,20 @@ public class MySqlGameDAOTest {
     }
 
     @Test
-    void deleteGameNull(){
-        Assertions.assertThrows(DataAccessException.class, () ->
-                gameDAO.deleteGame(new GameData(10, null, null,
-                        "fun", new ChessGame())) );
+    void deleteGameNull() throws DataAccessException {
+        gameDAO.deleteGame(10);
+
+        var foundGame = gameDAO.getGame(1);
+        Assertions.assertEquals(1, foundGame.gameID());
+        Assertions.assertEquals("joe", foundGame.whiteUsername());
+        Assertions.assertNull(foundGame.blackUsername());
+        Assertions.assertEquals("BringIt", foundGame.gameName());
+        Assertions.assertEquals(new ChessGame(), foundGame.game() );
     }
 
     @Test
     void deleteGameSuccess() throws DataAccessException {
-        gameDAO.deleteGame(new GameData(1, null, null,
-                "fun", new ChessGame()));
+        gameDAO.deleteGame(1);
         Assertions.assertThrows(DataAccessException.class, () ->
                 gameDAO.getGame(1) );
     }

@@ -88,14 +88,14 @@ public class MySqlGameDAO extends MySqlDAO implements GameDAO {
 
     @Override
     public void updateGame(int gameID, GameData newGame) throws DataAccessException {
+
         var statement = "UPDATE games SET chessGame=? WHERE gameID=?";
         executeUpdate(statement, newGame.game(), Integer.valueOf(gameID) );
     }
 
     @Override
-    public void deleteGame(GameData game) throws DataAccessException {
+    public void deleteGame(int gameID) throws DataAccessException {
         var statement = "DELETE FROM games WHERE gameID=?";
-        int gameID = game.gameID();
         executeUpdate(statement, Integer.valueOf(gameID));
     }
 

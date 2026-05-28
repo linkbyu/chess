@@ -38,12 +38,13 @@ public class MemoryGameDAO implements GameDAO {
     @Override
     public void updateGame(int desiredGameID, GameData newGame) throws DataAccessException {
         GameData oldGame = getGame(desiredGameID);
-        deleteGame(oldGame);
+        deleteGame(oldGame.gameID());
         addGame(newGame);
     }
 
     @Override
-    public void deleteGame(GameData game) throws DataAccessException {
+    public void deleteGame(int gameID) throws DataAccessException {
+        var game = getGame(gameID);
         gameList.remove(game);
     }
 
