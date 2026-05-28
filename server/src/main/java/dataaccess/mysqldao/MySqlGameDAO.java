@@ -1,4 +1,4 @@
-package dataaccess.MySqlDAO;
+package dataaccess.mysqldao;
 
 import chess.ChessGame;
 import com.google.gson.Gson;

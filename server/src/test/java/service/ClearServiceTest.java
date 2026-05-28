@@ -2,9 +2,9 @@ package service;
 
 import chess.ChessGame;
 import dataaccess.*;
-import dataaccess.MySqlDAO.MySqlAuthDAO;
-import dataaccess.MySqlDAO.MySqlGameDAO;
-import dataaccess.MySqlDAO.MySqlUserDAO;
+import dataaccess.mysqldao.MySqlAuthDAO;
+import dataaccess.mysqldao.MySqlGameDAO;
+import dataaccess.mysqldao.MySqlUserDAO;
 import dataaccess.exception.BadRequestException;
 import dataaccess.exception.DataAccessException;
 import dataaccess.exception.UnauthorizedException;

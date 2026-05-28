@@ -1,4 +1,4 @@
-package dataaccess.MySqlDAO;
+package dataaccess.mysqldao;
 
 import dataaccess.UserDAO;
 import dataaccess.exception.BadRequestException;
