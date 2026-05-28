@@ -138,7 +138,7 @@ public class MySqlGameDAOTest {
     void clearGamesSuccess() throws DataAccessException {
         gameDAO.clear();
         Assertions.assertThrows(DataAccessException.class, () ->
-                gameDAO.getGame(10) );
+                gameDAO.getGame(1) );
     }
 
 }

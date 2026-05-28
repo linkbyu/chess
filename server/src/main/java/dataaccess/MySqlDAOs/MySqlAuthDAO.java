@@ -15,7 +15,8 @@ public class MySqlAuthDAO extends MySqlDAO implements AuthDAO {
                 """
             CREATE TABLE IF NOT EXISTS  auth (
               `username` varchar(32) NOT NULL,
-              `authToken` varchar(64) NOT NULL PRIMARY KEY
+              `authToken` varchar(64) NOT NULL PRIMARY KEY,
+              FOREIGN KEY (username) REFERENCES users(username)
             );
             """
         };
