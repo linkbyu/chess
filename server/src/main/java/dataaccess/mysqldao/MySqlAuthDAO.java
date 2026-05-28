@@ -12,11 +12,10 @@ public class MySqlAuthDAO extends MySqlDAO implements AuthDAO {
 
     public MySqlAuthDAO() throws DataAccessException {
         String[] createStatements = {
-                """
+            """
             CREATE TABLE IF NOT EXISTS  auth (
               `username` varchar(32) NOT NULL,
-              `authToken` varchar(64) NOT NULL PRIMARY KEY,
-              FOREIGN KEY (username) REFERENCES users(username)
+              `authToken` varchar(64) NOT NULL PRIMARY KEY
             );
             """
         };
