@@ -7,8 +7,8 @@ import dataaccess.AuthDAO;
 import model.AuthData;
 import model.UserData;
 import org.mindrot.jbcrypt.BCrypt;
-import service.params.LoginRequest;
-import service.params.RegisterRequest;
+import model.params.LoginRequest;
+import model.params.RegisterRequest;
 
 
 public class UserService {

@@ -7,7 +7,7 @@ import model.AuthData;
 import org.jetbrains.annotations.NotNull;
 import service.GameService;
 import service.UserService;
-import service.params.JoinRequest;
+import model.params.JoinRequest;
 
 public class JoinGameHandler implements Handler {
     private final UserService userService;

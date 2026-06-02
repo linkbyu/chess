@@ -7,11 +7,10 @@ import dataaccess.exception.AlreadyTakenException;
 import dataaccess.exception.BadRequestException;
 import dataaccess.exception.DataAccessException;
 import model.GameData;
-import service.params.CreateRequest;
-import service.params.JoinRequest;
+import model.params.CreateRequest;
+import model.params.JoinRequest;
 
 import java.util.Collection;
-import java.util.Random;
 
 import static java.lang.Math.abs;
 

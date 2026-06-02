@@ -6,7 +6,7 @@ import io.javalin.http.Handler;
 import model.AuthData;
 import org.jetbrains.annotations.NotNull;
 import service.UserService;
-import service.params.RegisterRequest;
+import model.params.RegisterRequest;
 
 public class RegisterHandler implements Handler {
     private final UserService userService;

@@ -1,24 +1,27 @@
-package client;
+package ui;
 
-import ui.Prelogin;
+import client.ServerFacade;
 
 import java.util.Arrays;
 import java.util.Scanner;
 
+import static ui.EscapeSequences.*;
+
 public class Repl {
     private ServerFacade server;
-    private Prelogin clientUI;
+    private ClientUI client;
 
     public Repl(String serverUrl) {
         server = new ServerFacade(serverUrl);
+        client = new PreloginUI();
     }
 
     public void run() {
-        System.out.println(help());
+        System.out.println( client.help() );
         Scanner scanner = new Scanner(System.in);
 
         var result = "";
-        while ( !result.equals("q") | !result.equals("quit")) {
+        while ( client.doesNotQuit(result) ) {
 
             printPrompt();
             String input = scanner.nextLine();
@@ -27,18 +30,9 @@ public class Repl {
         }
     }
 
-    private String help() {
-
-    }
 
     private void printPrompt() {
-        System.out.print();
+        System.out.print(client.replIcon + RESET_TEXT_COLOR + " >>> ");
     }
 
-    private String eval(String input) {
-        try {
-            String[] tokens = input.toLowerCase().split(" ");
-            String command = Arrays.stream(tokens).findFirst();
-        }
-    }
 }

@@ -12,8 +12,8 @@ import dataaccess.exception.BadRequestException;
 import dataaccess.exception.DataAccessException;
 import model.GameData;
 import org.junit.jupiter.api.*;
-import service.params.CreateRequest;
-import service.params.JoinRequest;
+import model.params.CreateRequest;
+import model.params.JoinRequest;
 
 import static chess.ChessGame.TeamColor.WHITE;
 

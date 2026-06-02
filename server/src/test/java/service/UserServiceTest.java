@@ -12,8 +12,8 @@ import dataaccess.exception.DataAccessException;
 import dataaccess.exception.UnauthorizedException;
 import model.AuthData;
 import org.junit.jupiter.api.*;
-import service.params.LoginRequest;
-import service.params.RegisterRequest;
+import model.params.LoginRequest;
+import model.params.RegisterRequest;
 
 
 public class UserServiceTest {

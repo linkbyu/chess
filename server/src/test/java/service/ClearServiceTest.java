@@ -11,10 +11,10 @@ import dataaccess.exception.UnauthorizedException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import service.params.CreateRequest;
-import service.params.JoinRequest;
-import service.params.LoginRequest;
-import service.params.RegisterRequest;
+import model.params.CreateRequest;
+import model.params.JoinRequest;
+import model.params.LoginRequest;
+import model.params.RegisterRequest;
 
 public class ClearServiceTest {
 

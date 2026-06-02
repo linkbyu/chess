@@ -1,4 +1,4 @@
-package service.params;
+package model.params;
 
 import chess.ChessGame;
 

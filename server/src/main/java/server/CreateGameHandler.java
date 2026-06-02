@@ -6,7 +6,7 @@ import io.javalin.http.Handler;
 import org.jetbrains.annotations.NotNull;
 import service.GameService;
 import service.UserService;
-import service.params.CreateRequest;
+import model.params.CreateRequest;
 
 public class CreateGameHandler implements Handler {
     private final UserService userService;
