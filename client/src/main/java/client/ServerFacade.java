@@ -51,12 +51,12 @@ public class ServerFacade {
         return handleResponse(response, GameData.class);
     }
 
-    //RETURN TYPE?
+
     public String createGame(CreateRequest createRequest) throws ResponseException {
         var request = buildRequest("POST", "/game", createRequest.gameName() );
         var response = sendRequest(request);
 
-        return handleResponse(response, String.class); // confused on what/if this should return
+        return handleResponse(response, String.class); // return gameID as a String
     }
 
     public void joinGame(JoinRequest joinRequest) throws ResponseException {
