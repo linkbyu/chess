@@ -63,7 +63,7 @@ public class ServerFacade {
     }
 
     public void joinGame(String authToken, JoinRequest joinRequest) throws ResponseException {
-        var request = buildRequest("PUT", "/session", authToken, joinRequest);
+        var request = buildRequest("PUT", "/game", authToken, joinRequest);
         var response = sendRequest(request);
         handleResponse(response, null);
     }
