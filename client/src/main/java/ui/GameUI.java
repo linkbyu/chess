@@ -24,6 +24,7 @@ public final class GameUI extends ClientUI {
         super(server, authData);
         this.gameData = gameData;
         game = gameData.game();
+        replIcon = String.format("[Game \"%s\"]", gameData.gameName());
     }
 
     @Override
@@ -40,7 +41,10 @@ public final class GameUI extends ClientUI {
     String commandMenu(String command, String[] params) throws ResponseException {
         return switch(command) {
             case "draw" -> printBoardSetup();
-            case "leave" -> "leave";
+            case "leave" -> {
+                setUIShift(true);
+                yield String.format("Leaving \"%s\"", gameData.gameName());
+            }
             case "help" -> help();
             default -> {
                 System.out.println(SET_TEXT_COLOR_RED + "Unknown command. Please try again." + RESET_TEXT_COLOR);
@@ -72,11 +76,8 @@ public final class GameUI extends ClientUI {
         out.print(ERASE_SCREEN);
 
         drawLetterLabels(out);
-
         drawChessBoard(out, teamColor);
-
-        out.print(SET_BG_COLOR_BLACK);
-        out.print(SET_TEXT_COLOR_WHITE);
+        drawLetterLabels(out);
 
     }
 
@@ -88,26 +89,33 @@ public final class GameUI extends ClientUI {
 
         String[] letterLabels = { "a", "b", "c", "d", "e", "f", "g", "h" };
         for (int boardCol = 1; boardCol < BOARD_LENGTH_LIMIT_IN_SQUARES; ++boardCol) {
-            drawHorizontalBorder(out, letterLabels[boardCol]);
+            drawHorizontalBorder(out, letterLabels[boardCol - 1]);
         }
 
         emptyBorderSquare(out);
+        resetPrintColor(out);
         out.println();
     }
 
     private static void setBorderColor(PrintStream out) {
         out.print(SET_BG_COLOR_WHITE);
-        out.print(SET_TEXT_COLOR_WHITE);
+        out.print(SET_TEXT_COLOR_DARK_GREY);
     }
 
     private void emptyBorderSquare(PrintStream out) {
-        out.print(EMPTY.repeat(3));
+        out.print(EMPTY);
     }
 
+    private void resetPrintColor(PrintStream out) {
+        out.print(RESET_BG_COLOR);
+        out.print(RESET_TEXT_COLOR);
+    }
+
+    private static final String letterSpacer = " ";
     private void drawHorizontalBorder(PrintStream out, String letter) {
-        out.print(EMPTY);
+        out.print(letterSpacer);
         out.print(letter);
-        out.print(EMPTY);
+        out.print(letterSpacer);
     }
 
     private boolean evenRow;
@@ -120,8 +128,8 @@ public final class GameUI extends ClientUI {
             case BLACK -> new int[] {8, 7, 6, 5, 4, 3, 2, 1};
         };
 
-        for (int boardRow = 0; boardRow < BOARD_LENGTH_LIMIT_IN_SQUARES; ++boardRow) {
-            int rowNum = rowLabels[boardRow];
+        for (int boardRow = 1; boardRow < BOARD_LENGTH_LIMIT_IN_SQUARES; ++boardRow) {
+            int rowNum = rowLabels[boardRow - 1];
             evenRow = (rowNum % 2) == 0;
 
             printRowLabelSquare(out, rowNum);
@@ -133,6 +141,7 @@ public final class GameUI extends ClientUI {
 
 
             printRowLabelSquare(out, rowNum);
+            resetPrintColor(out);
             out.println();
         }
 
@@ -160,25 +169,22 @@ public final class GameUI extends ClientUI {
     }
 
     private void setDarkSquareColor(PrintStream out) {
-        out.print(SET_BG_COLOR_DARK_GREEN);
-        out.print(SET_TEXT_COLOR_GREEN);
+        out.print(SET_BG_COLOR_LIGHT_GREY);
+        out.print(SET_TEXT_COLOR_BLACK);
     }
 
     private void setLightSquareColor(PrintStream out) {
-        out.print(SET_BG_COLOR_GREEN);
-        out.print(SET_TEXT_COLOR_GREEN);
+        out.print(SET_BG_COLOR_WHITE);
+        out.print(SET_TEXT_COLOR_BLACK);
     }
 
     private void printRowLabelSquare(PrintStream out, int rowNum) {
-        setBorderColor(out);
-        out.print(EMPTY);
-        out.print(rowNum);
-        out.print(EMPTY);
+        setBorderColor(out);;
+        out.print(letterSpacer + rowNum + letterSpacer);
 
     }
 
     private void printBoardSquare(PrintStream out, ChessPosition position) {
-        out.print(EMPTY);
 
         ChessBoard board = game.getBoard();
         ChessPiece piece = board.getPiece(position);
@@ -202,8 +208,9 @@ public final class GameUI extends ClientUI {
             };
             out.print(pieceIcon);
         }
-
-        out.print(EMPTY);
+        else {
+            out.print(EMPTY);
+        }
     }
 
 

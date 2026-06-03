@@ -31,7 +31,7 @@ public class GameService {
     public int createGame(CreateRequest createRequest) throws DataAccessException {
         String gameName = createRequest.gameName();
         if ( gameName == null || gameName.isBlank() ){
-            throw new BadRequestException("Error: no given game name");
+            throw new BadRequestException("no given game name");
         }
 
         int gameID = gameDAO.addGame(new GameData(1, null, null,
@@ -45,12 +45,12 @@ public class GameService {
 
         var requestedTeam = joinRequest.playerColor();
         if ( requestedTeam == null ){
-            throw new BadRequestException("Error: invalid requested team");
+            throw new BadRequestException("invalid requested team");
         }
         switch( requestedTeam ){
             case WHITE:
                 if (game.whiteUsername() != null) {
-                    throw new AlreadyTakenException("Error: White team already taken");
+                    throw new AlreadyTakenException("White team already taken");
                 }
                 else {
                     gameDAO.updateGame(gameID, new GameData(gameID, username, game.blackUsername(),
@@ -59,7 +59,7 @@ public class GameService {
                 break;
             case BLACK:
                 if (game.blackUsername() != null) {
-                    throw new AlreadyTakenException("Error: Black team already taken");
+                    throw new AlreadyTakenException("Black team already taken");
                 }
                 else {
                     gameDAO.updateGame(gameID, new GameData(gameID, game.whiteUsername(), username,
@@ -75,7 +75,7 @@ public class GameService {
             return requestedGame;
         }
         else {
-            throw new BadRequestException("Error: requested game does not exist");
+            throw new BadRequestException("requested game does not exist");
         }
     }
 

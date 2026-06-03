@@ -26,16 +26,19 @@ public class Repl {
         Scanner scanner = new Scanner(System.in);
 
         var result = "";
-        while ( !result.equals("quit") ) {
+        while ( true ) {
             System.out.print(result);
             printPrompt();
             String line = scanner.nextLine();
 
             try {
                 result = eval(line);
-
+                if (result.equals("quit")) {
+                    break;
+                }
             } catch (Exception ex) {
-                System.out.print("  " + SET_TEXT_COLOR_RED + ex.getMessage());
+                result = RESPONSE_SPACING + SET_TEXT_COLOR_RED + ex.getMessage();
+
             }
         }
         System.out.println(SET_TEXT_COLOR_BLUE +  "Thanks for playing!");
@@ -46,16 +49,19 @@ public class Repl {
         System.out.print("\n" + client.replIcon + RESET_TEXT_COLOR + " >>> ");
     }
 
+    static final String RESPONSE_SPACING = "  ";
 
     private String eval(String input) throws ResponseException {
         String[] tokens = input.toLowerCase().split(" ");
         String command = (tokens.length > 0) ? tokens[0] : "";
         String[] params = Arrays.copyOfRange(tokens, 1, tokens.length);
 
+        //String result = RESPONSE_SPACING;
         String result = client.commandMenu(command, params);
         if (client.isUIShift()) {
             switchUI(command, params);
             client.setUIShift(false);
+            result += "\n" + client.help();
         }
         return result;
     }
@@ -63,7 +69,7 @@ public class Repl {
 
         private void switchUI(String command, String[] params) throws ResponseException {
         switch (command) {
-            case "register", "login":
+            case "register", "r", "login", "l":
                 userAuth = client.getAuth();
                 client = new PostloginUI(facade, userAuth);
                 break;

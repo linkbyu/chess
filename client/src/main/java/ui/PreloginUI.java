@@ -13,7 +13,7 @@ public final class PreloginUI extends ClientUI {
 
     public PreloginUI(ServerFacade server) {
         super(server, null);
-        replIcon = SET_TEXT_COLOR_RED + "[LOGGED_OUT]" + RESET_TEXT_COLOR;
+        replIcon = SET_TEXT_COLOR_LIGHT_GREY + "[LOGGED_OUT]" + RESET_TEXT_COLOR;
     }
 
 
@@ -47,21 +47,21 @@ public final class PreloginUI extends ClientUI {
 
 
 
-    private String registerSetup(String... params) throws ResponseException {
+    private String registerSetup(String[] params) throws ResponseException {
         if (params.length == 3) {
             authData = facade.register(new RegisterRequest(params[0], params[1], params[2]));
             setUIShift(true);
-            return "Successfully registered.";
+            return "Successfully registered.\n" + String.format("Logged in as user %s.", params[0]);
         }
-        throw new ResponseException(ResponseException.Code.BadRequest, "Expected only: <USERNAME> <PASSWORD> <EMAIL>");
+        throw new ResponseException(ResponseException.Code.BadRequest, "Expected: \"register\" <USERNAME> <PASSWORD> <EMAIL>");
     }
 
-    private String loginSetup(String... params) throws ResponseException {
+    private String loginSetup(String[] params) throws ResponseException {
         if (params.length == 2){
             authData = facade.login(new LoginRequest(params[0], params[1]));
             setUIShift(true);
             return String.format("Logged in as user %s.", params[0]);
         }
-        throw new ResponseException(ResponseException.Code.BadRequest, "Expected only: <USERNAME> <PASSWORD>");
+        throw new ResponseException(ResponseException.Code.BadRequest, "Expected: \"login\" <USERNAME> <PASSWORD>");
     }
 }

@@ -16,13 +16,12 @@ public final class PostloginUI extends ClientUI{
 
     private final String username;
     private final String authToken;
-    public static String replICON;
 
     public PostloginUI(ServerFacade facade, AuthData authData) {
         super(facade, authData);
         username = authData.username();
         authToken = authData.authToken();
-        replICON = String.format(SET_TEXT_COLOR_GREEN + "[%s]", username);
+        replIcon = String.format(SET_TEXT_COLOR_GREEN + "[%s]", username);
     }
 
 
@@ -35,7 +34,7 @@ public final class PostloginUI extends ClientUI{
 
         builder.append(helpTextColor("observe <GAME #>", "observe a game"));
         builder.append(helpTextColor("logout", "when you are done"));
-        builder.append(helpTextColor("help", "show possible commands again"));
+        builder.append(helpTextColor("\"help\" or \"h\"", "show possible commands again"));
 
         return builder.toString();
     }
@@ -44,17 +43,15 @@ public final class PostloginUI extends ClientUI{
     String commandMenu(String command, String[] params) throws ResponseException {
         return switch(command) {
             case "list" -> listGames();
-            case "join" -> joinGame(params[0], params[1]);
+            case "join" -> joinGame(params);
 
-            case "create" -> createGame(params[0]);
-            case "observe" -> observeGame(params[0], params[1]);
+            case "create" -> createGame(params);
+            case "observe" -> observeGame(params);
 
             case "logout" -> logout();
-            case "help" -> help();
-            default -> {
-                System.out.println(SET_TEXT_COLOR_RED + "Unknown command. Please try again." + RESET_TEXT_COLOR);
-                yield help();
-            }
+            case "help", "h" -> help();
+            default -> throw new ResponseException(ResponseException.Code.BadRequest,
+                        "Unknown command. Please try again.\n" + help());
 
         };
     }
@@ -63,49 +60,80 @@ public final class PostloginUI extends ClientUI{
         var gameCatalog = facade.listGames(authToken);
         List<GameData> games = gameCatalog.gameList();
 
-        var builder = new StringBuilder();
+        if (!games.isEmpty()) {
+            var builder = new StringBuilder();
 
-        for (GameData game : games) {
-            builder.append( game.gameID() );
-            builder.append(".   Game name: ");
-            builder.append( game.gameName() );
-            builder.append("    White: ");
-            builder.append( game.whiteUsername() );
-            builder.append("     Black: ");
-            builder.append( game.blackUsername() );
-            builder.append(" \n");
+            for (GameData game : games) {
+                builder.append(game.gameID());
+                builder.append(".   Game name: ");
+                builder.append(game.gameName());
+                builder.append("    White: ");
+                builder.append(game.whiteUsername());
+                builder.append("     Black: ");
+                builder.append(game.blackUsername());
+                builder.append(" \n");
+            }
+
+            return builder.toString();
         }
-
-        return builder.toString();
+        else {
+            return SET_TEXT_COLOR_YELLOW + "No active games available!";
+        }
     }
 
-    private String createGame(String... params) throws ResponseException {
+    private String createGame(String[] params) throws ResponseException {
         if (params.length == 1) {
-            facade.createGame(authToken, new CreateRequest(params[0]));
+            String gameName = params[0];
+            facade.createGame(authToken, new CreateRequest(gameName));
 
-            return "";
+            return String.format("Successfully created game \"%s\".", gameName);
         }
-        throw new ResponseException(ResponseException.Code.BadRequest, "Expected only: <GAME_NAME>");
+        throw new ResponseException(ResponseException.Code.BadRequest, "Expected: \"create\" <GAME_NAME>");
     }
 
-    private String joinGame(String inputColor, String listGameNum) throws ResponseException {
-        ChessGame.TeamColor playerColor = convertStringToTeamColor(inputColor);
-        int gameID = Integer.parseInt(listGameNum);
+    private String joinGame(String[] params) throws ResponseException {
+        if (params.length == 2) {
+            var desiredGame = getGame(params[0]);
+            ChessGame.TeamColor playerColor = convertStringToTeamColor(params[1]);
+            int gameID = desiredGame.gameID();
+            String gameName = desiredGame.gameName();
 
-        // int gameID = getGameID(listGameNum)
-
-        facade.joinGame(authToken, new JoinRequest(playerColor, gameID));
-        setUIShift(true);
-        return String.format("Joined game %d as %s", gameID, username);
+            facade.joinGame(authToken, new JoinRequest(playerColor, gameID));
+            setUIShift(true);
+            String joinedTeam = switch(playerColor){
+                case WHITE -> "White";
+                case BLACK -> "Black";
+            };
+            return String.format("Joined game \"%s\" on the %s Team.", gameName, joinedTeam);
+        }
+        throw new ResponseException(ResponseException.Code.BadRequest, "Expected: \"join\" <GAME #> [WHITE|BLACK]");
     }
 
-    private ChessGame.TeamColor convertStringToTeamColor(String input) {
-        return ChessGame.TeamColor.WHITE;
+    private ChessGame.TeamColor convertStringToTeamColor(String input) throws ResponseException {
+        input = input.toLowerCase();
+        return switch(input) {
+            case "white", "w" -> ChessGame.TeamColor.WHITE;
+            case "black", "b" -> ChessGame.TeamColor.BLACK;
+            default -> throw new ResponseException(ResponseException.Code.BadRequest,
+                        "Invalid [Team]; Expected: \"White\" or \"Black\"");
+        };
     }
 
-    private String observeGame(String inputColor, String gameIDString) {
-        ChessGame.TeamColor playerColor = convertStringToTeamColor(inputColor);
-        int gameID = Integer.parseInt(gameIDString);
+    private GameData getGame(String listGameNum) throws ResponseException{
+        try {
+            int requestedNum = Integer.parseInt(listGameNum);
+            var gameCatalog = facade.listGames(authToken);
+            List<GameData> games = gameCatalog.gameList();
+
+            return games.get(requestedNum - 1);
+        } catch(NumberFormatException | NullPointerException e){
+            throw new ResponseException(ResponseException.Code.BadRequest,
+                    "Invalid <GAME #>...Please check the available games again.");
+        }
+    }
+
+    private String observeGame(String[] params) {
+
         return "";
     }
 

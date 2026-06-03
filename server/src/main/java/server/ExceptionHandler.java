@@ -17,19 +17,19 @@ public class ExceptionHandler implements io.javalin.http.ExceptionHandler<Except
         switch(e) {
             case BadRequestException badE:
                 ctx.status(400);
-                builder.append("bad request");
+                builder.append(e.getMessage());
                 break;
             case UnauthorizedException bad:
                 ctx.status(401);
-                builder.append("unauthorized");
+                builder.append(e.getMessage());
                 break;
             case UserNullException bad:
                 ctx.status(401);
-                builder.append("unauthorized");
+                builder.append(e.getMessage());
                 break;
             case AlreadyTakenException bad:
                 ctx.status(403);
-                builder.append("already taken");
+                builder.append(e.getMessage());
                 break;
             default:
                 ctx.status(500);

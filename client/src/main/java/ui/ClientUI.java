@@ -6,6 +6,7 @@ import model.AuthData;
 
 import static ui.EscapeSequences.*;
 import static ui.EscapeSequences.RESET_TEXT_COLOR;
+import static ui.Repl.RESPONSE_SPACING;
 
 public abstract sealed class ClientUI
         permits GameUI, PostloginUI, PreloginUI {
@@ -29,7 +30,7 @@ public abstract sealed class ClientUI
     }
 
     protected String helpTextColor(String instruction, String explanation) {
-        String instructionTextSetup = "  " + SET_TEXT_COLOR_BLUE;
+        String instructionTextSetup = RESPONSE_SPACING + SET_TEXT_COLOR_BLUE;
         String explanationTextSetup = " - " + SET_TEXT_COLOR_MAGENTA;
 
         return instructionTextSetup + instruction + RESET_TEXT_COLOR
