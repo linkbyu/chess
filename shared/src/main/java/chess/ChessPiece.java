@@ -107,7 +107,7 @@ public class ChessPiece implements Cloneable{
     @Override
     public String toString() {
         return switch(pieceColor){
-            case WHITE -> switch (type){
+            case WHITE -> switch (type) {
                 case PAWN -> "P";
                 case ROOK -> "R";
                 case KNIGHT -> "N";

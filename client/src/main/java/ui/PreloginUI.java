@@ -33,7 +33,7 @@ public final class PreloginUI extends ClientUI {
 
 
     @Override
-    String commandMenu(String command, String[] params) throws ResponseException {
+    void commandMenu(String command, String[] params) throws ResponseException {
         return switch(command) {
             case "register" -> registerSetup(params);
             case "login" -> loginSetup(params);
@@ -50,8 +50,8 @@ public final class PreloginUI extends ClientUI {
 
     private String registerSetup(String... params) throws ResponseException {
         if (params.length == 3) {
-            authData = server.register(new RegisterRequest(params[0], params[1], params[2]));
-            setShiftUIFlag(true);
+            authData = facade.register(new RegisterRequest(params[0], params[1], params[2]));
+            setUIShift(true);
             return "Successfully registered.";
         }
         throw new ResponseException(ResponseException.Code.BadRequest, "Expected only: <USERNAME> <PASSWORD> <EMAIL>");
@@ -59,7 +59,8 @@ public final class PreloginUI extends ClientUI {
 
     private String loginSetup(String... params) throws ResponseException {
         if (params.length == 2){
-            authData = server.login(new LoginRequest(params[0], params[1]));
+            authData = facade.login(new LoginRequest(params[0], params[1]));
+            setUIShift(true);
             return String.format("Logged in as user %s.", params[0]);
         }
         throw new ResponseException(ResponseException.Code.BadRequest, "Expected only: <USERNAME> <PASSWORD>");

@@ -31,8 +31,7 @@ public class Repl {
             String line = scanner.nextLine();
 
             try {
-                result = eval(line);
-                System.out.print(result);
+                eval(line);
 
             } catch (Exception ex) {
                 System.out.print(ex.getMessage());
@@ -50,47 +49,44 @@ public class Repl {
     }
 
 
-    private String eval(String input) {
+    private void eval(String input) {
         try {
             String[] tokens = input.toLowerCase().split(" ");
             String command = (tokens.length > 0) ? tokens[0] : "";
             String[] params = Arrays.copyOfRange(tokens, 1, tokens.length);
 
-            String result = client.commandMenu(command, params);
-            conditionalSwitchUI(command, params);
-
-            return result;
-
-            } catch (ResponseException ex) {
-            return ex.getMessage();
-        }
-    }
-
-    private boolean ShiftUIFlag;
-
-    private void conditionalSwitchUI(String command, String[] params) throws ResponseException {
-        if (ShiftUIFlag) {
-            switch (command) {
-                case "register", "login":
-                    userAuth = client.getAuth();
-                    client = new PostloginUI(facade, userAuth);
-                    break;
-                case "logout":
-                    userAuth = null;
-                    client = new PreloginUI(facade);
-                    break;
-                case "join", "observe":
-                    var gameList = facade.listGames(userAuth.authToken()).gameList();
-                    var desiredGame = gameList.get(Integer.parseInt(params[0]) - 1);
-                    client = new GameUI(facade, userAuth, desiredGame);
-                    break;
+            client.commandMenu(command, params);
+            if (client.isUIShift()) {
+                switchUI(command, params);
+                client.setUIShift(false);
             }
-            ShiftUIFlag = false;
+
+        } catch (ResponseException ex) {
+            System.out.print( ex.getMessage() );
+            System.out.println();
         }
     }
 
-    // TO-DO : why is this function not working
-    void setShiftUIFlag(boolean shiftUIFlag) {
-        this.ShiftUIFlag = shiftUIFlag;
+
+    private void switchUI(String command, String[] params) throws ResponseException {
+        switch (command) {
+            case "register", "login":
+                userAuth = client.getAuth();
+                client = new PostloginUI(facade, userAuth);
+                break;
+            case "logout":
+                userAuth = null;
+                client = new PreloginUI(facade);
+                break;
+            case "join", "observe":
+                var gameList = facade.listGames(userAuth.authToken()).gameList();
+                var desiredGame = gameList.get(Integer.parseInt(params[0]) - 1);
+                client = new GameUI(facade, userAuth, desiredGame);
+                break;
+            case "leave":
+                client = new PostloginUI(facade, userAuth);
+                break;
+        }
     }
+
 }

@@ -13,8 +13,8 @@ public final class PostloginUI extends ClientUI{
     private final String authToken;
     public static String replICON;
 
-    public PostloginUI(ServerFacade server, AuthData authData) {
-        super(server, authData);
+    public PostloginUI(ServerFacade facade, AuthData authData) {
+        super(facade, authData);
         username = authData.username();
         authToken = authData.authToken();
         replICON = String.format(SET_TEXT_COLOR_GREEN + "[%s]", username);
@@ -36,22 +36,22 @@ public final class PostloginUI extends ClientUI{
     }
 
     @Override
-    String commandMenu(String command, String[] params) throws ResponseException {
-        return switch(command) {
-            case "list" -> server.listGames(authToken).toString();
+    void commandMenu(String command, String[] params) throws ResponseException {
+        switch(command) {
+            case "list" -> facade.listGames(authToken);
             //case "join" -> server.joinGame();
 
             case "create" -> createGame(params[0]);
             //case "observe" -> server.observe();
 
             case "logout" -> {
-                server.logout(authToken);
-                yield "logout";
+                facade.logout(authToken);
+                setUIShift(true);
             }
             case "help" -> help();
             default -> {
                 System.out.println(SET_TEXT_COLOR_RED + "Unknown command. Please try again." + RESET_TEXT_COLOR);
-                yield help();
+                help();
             }
 
         };
@@ -59,7 +59,7 @@ public final class PostloginUI extends ClientUI{
 
     private String createGame(String... params) throws ResponseException {
         if (params.length == 1) {
-            server.createGame(authToken, new CreateRequest(params[0]));
+            facade.createGame(authToken, new CreateRequest(params[0]));
 
             return "";
         }
