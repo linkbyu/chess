@@ -28,8 +28,6 @@ public final class GameUI extends ClientUI {
 
     @Override
     public String help() {
-
-
         var builder = new StringBuilder();
 
         builder.append(helpTextColor("draw", "to redraw the board"));
@@ -39,21 +37,19 @@ public final class GameUI extends ClientUI {
     }
 
     @Override
-    void commandMenu(String command, String[] params) throws ResponseException {
-        switch(command) {
+    String commandMenu(String command, String[] params) throws ResponseException {
+        return switch(command) {
             case "draw" -> printBoardSetup();
-            case "leave" -> {
-
-            }
+            case "leave" -> "leave";
             case "help" -> help();
             default -> {
                 System.out.println(SET_TEXT_COLOR_RED + "Unknown command. Please try again." + RESET_TEXT_COLOR);
-                help();
+                yield help();
             }
         };
     }
 
-    private void printBoardSetup() {
+    private String printBoardSetup() {
         String username = authData.username();
         String blackUsername = gameData.blackUsername();
 
@@ -66,6 +62,7 @@ public final class GameUI extends ClientUI {
         }
 
         printBoard(team);
+        return "";
     }
 
     private void printBoard(TeamColor teamColor) {

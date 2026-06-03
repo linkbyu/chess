@@ -12,7 +12,7 @@ public abstract sealed class ClientUI
 
     protected ServerFacade facade;
     protected AuthData authData;
-    public String replIcon = SET_TEXT_COLOR_DARK_GREY + "[UNKNOWN]";
+    public String replIcon = SET_TEXT_COLOR_LIGHT_GREY + "[UNKNOWN]";
     private boolean UIShift;
 
     public ClientUI(ServerFacade server, AuthData authData) {
@@ -22,15 +22,15 @@ public abstract sealed class ClientUI
 
 
     public abstract String help();
-    abstract void commandMenu(String command, String[] params) throws ResponseException;
+    abstract String commandMenu(String command, String[] params) throws ResponseException;
 
     public AuthData getAuth() {
         return authData;
     }
 
     protected String helpTextColor(String instruction, String explanation) {
-        String instructionTextSetup = "  " + SET_BG_COLOR_BLUE;
-        String explanationTextSetup = " - " + SET_BG_COLOR_MAGENTA;
+        String instructionTextSetup = "  " + SET_TEXT_COLOR_BLUE;
+        String explanationTextSetup = " - " + SET_TEXT_COLOR_MAGENTA;
 
         return instructionTextSetup + instruction + RESET_TEXT_COLOR
                 + explanationTextSetup + explanation + RESET_TEXT_COLOR + "\n";

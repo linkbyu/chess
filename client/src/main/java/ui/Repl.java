@@ -22,53 +22,46 @@ public class Repl {
     private AuthData userAuth;
 
     public void run() {
-        System.out.println( client.help() );
+        System.out.print( client.help() );
         Scanner scanner = new Scanner(System.in);
 
         var result = "";
-        while ( doesNotQuit(result) ) {
+        while ( !result.equals("quit") ) {
+            System.out.print(result);
             printPrompt();
             String line = scanner.nextLine();
 
             try {
-                eval(line);
+                result = eval(line);
 
             } catch (Exception ex) {
-                System.out.print(ex.getMessage());
+                System.out.print("  " + SET_TEXT_COLOR_RED + ex.getMessage());
             }
-            System.out.println();
         }
+        System.out.println(SET_TEXT_COLOR_BLUE +  "Thanks for playing!");
     }
 
-    private boolean doesNotQuit(String result) {
-        return !result.equals("q") && !result.equals("quit");
-    }
 
     private void printPrompt() {
-        System.out.print(client.replIcon + RESET_TEXT_COLOR + " >>> " + SET_TEXT_COLOR_DARK_GREY);
+        System.out.print("\n" + client.replIcon + RESET_TEXT_COLOR + " >>> ");
     }
 
 
-    private void eval(String input) {
-        try {
-            String[] tokens = input.toLowerCase().split(" ");
-            String command = (tokens.length > 0) ? tokens[0] : "";
-            String[] params = Arrays.copyOfRange(tokens, 1, tokens.length);
+    private String eval(String input) throws ResponseException {
+        String[] tokens = input.toLowerCase().split(" ");
+        String command = (tokens.length > 0) ? tokens[0] : "";
+        String[] params = Arrays.copyOfRange(tokens, 1, tokens.length);
 
-            client.commandMenu(command, params);
-            if (client.isUIShift()) {
-                switchUI(command, params);
-                client.setUIShift(false);
-            }
-
-        } catch (ResponseException ex) {
-            System.out.print( ex.getMessage() );
-            System.out.println();
+        String result = client.commandMenu(command, params);
+        if (client.isUIShift()) {
+            switchUI(command, params);
+            client.setUIShift(false);
         }
+        return result;
     }
 
 
-    private void switchUI(String command, String[] params) throws ResponseException {
+        private void switchUI(String command, String[] params) throws ResponseException {
         switch (command) {
             case "register", "login":
                 userAuth = client.getAuth();

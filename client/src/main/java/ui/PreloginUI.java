@@ -9,40 +9,39 @@ import static ui.EscapeSequences.*;
 
 public final class PreloginUI extends ClientUI {
 
-    public final String replIcon = SET_TEXT_COLOR_RED + "[LOGGED_OUT]";
+
 
     public PreloginUI(ServerFacade server) {
         super(server, null);
+        replIcon = SET_TEXT_COLOR_RED + "[LOGGED_OUT]" + RESET_TEXT_COLOR;
     }
 
 
     @Override
     public String help() {
+        var builder = new StringBuilder();
+        builder.append(helpTextColor("\"register\" or \"r\" <USERNAME> <PASSWORD> <EMAIL>",
+                                            "to create an account"));
+        builder.append(helpTextColor("\"login\" or \"l\" <USERNAME> <PASSWORD>",
+                                        "to play chess"));
+        builder.append(helpTextColor("\"quit\" or \"q\"", "to exit program"));
+        builder.append(helpTextColor("\"help\" or \"h\"", "with possible commands"));
 
-        String registerLine = helpTextColor("register <USERNAME> <PASSWORD> <EMAIL>",
-                                            "to create an account");
-        String loginLine = helpTextColor("login <USERNAME> <PASSWORD>",
-                                        "to play chess");
-        String quitLine = helpTextColor("quit",
-                                        "to exit program");
-        String helpLine = helpTextColor("help",
-                                        "with possible commands");
-        return registerLine + loginLine + quitLine + helpLine + "\n";
+        return builder.toString();
     }
 
 
 
     @Override
-    void commandMenu(String command, String[] params) throws ResponseException {
+    String commandMenu(String command, String[] params) throws ResponseException {
         return switch(command) {
-            case "register" -> registerSetup(params);
-            case "login" -> loginSetup(params);
-            case "quit" -> "quit";
-            case "help" -> help();
-            default -> {
-                System.out.println(SET_TEXT_COLOR_RED + "Unknown command. Please try again." + RESET_TEXT_COLOR);
-                yield help();
-            }
+            case "register", "r" -> registerSetup(params);
+            case "login", "l" -> loginSetup(params);
+            case "quit", "q" -> "quit";
+            case "help", "h" -> help();
+
+            default -> throw new ResponseException(ResponseException.Code.BadRequest,
+                        "Unknown command. Please try again.\n" + help());
         };
     }
 

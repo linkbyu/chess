@@ -1,9 +1,14 @@
 package ui;
 
+import chess.ChessGame;
 import client.ServerFacade;
 import exception.ResponseException;
 import model.AuthData;
+import model.GameData;
 import model.params.CreateRequest;
+import model.params.JoinRequest;
+
+import java.util.List;
 
 import static ui.EscapeSequences.*;
 
@@ -36,25 +41,42 @@ public final class PostloginUI extends ClientUI{
     }
 
     @Override
-    void commandMenu(String command, String[] params) throws ResponseException {
-        switch(command) {
-            case "list" -> facade.listGames(authToken);
-            //case "join" -> server.joinGame();
+    String commandMenu(String command, String[] params) throws ResponseException {
+        return switch(command) {
+            case "list" -> listGames();
+            case "join" -> joinGame(params[0], params[1]);
 
             case "create" -> createGame(params[0]);
-            //case "observe" -> server.observe();
+            case "observe" -> observeGame(params[0], params[1]);
 
-            case "logout" -> {
-                facade.logout(authToken);
-                setUIShift(true);
-            }
+            case "logout" -> logout();
             case "help" -> help();
             default -> {
                 System.out.println(SET_TEXT_COLOR_RED + "Unknown command. Please try again." + RESET_TEXT_COLOR);
-                help();
+                yield help();
             }
 
         };
+    }
+
+    private String listGames() throws ResponseException {
+        var gameCatalog = facade.listGames(authToken);
+        List<GameData> games = gameCatalog.gameList();
+
+        var builder = new StringBuilder();
+
+        for (GameData game : games) {
+            builder.append( game.gameID() );
+            builder.append(".   Game name: ");
+            builder.append( game.gameName() );
+            builder.append("    White: ");
+            builder.append( game.whiteUsername() );
+            builder.append("     Black: ");
+            builder.append( game.blackUsername() );
+            builder.append(" \n");
+        }
+
+        return builder.toString();
     }
 
     private String createGame(String... params) throws ResponseException {
@@ -64,6 +86,33 @@ public final class PostloginUI extends ClientUI{
             return "";
         }
         throw new ResponseException(ResponseException.Code.BadRequest, "Expected only: <GAME_NAME>");
+    }
+
+    private String joinGame(String inputColor, String listGameNum) throws ResponseException {
+        ChessGame.TeamColor playerColor = convertStringToTeamColor(inputColor);
+        int gameID = Integer.parseInt(listGameNum);
+
+        // int gameID = getGameID(listGameNum)
+
+        facade.joinGame(authToken, new JoinRequest(playerColor, gameID));
+        setUIShift(true);
+        return String.format("Joined game %d as %s", gameID, username);
+    }
+
+    private ChessGame.TeamColor convertStringToTeamColor(String input) {
+        return ChessGame.TeamColor.WHITE;
+    }
+
+    private String observeGame(String inputColor, String gameIDString) {
+        ChessGame.TeamColor playerColor = convertStringToTeamColor(inputColor);
+        int gameID = Integer.parseInt(gameIDString);
+        return "";
+    }
+
+    private String logout() throws ResponseException {
+        facade.logout(authToken);
+        setUIShift(true);
+        return "Logged out.";
     }
 
 }
