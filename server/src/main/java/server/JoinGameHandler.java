@@ -26,6 +26,6 @@ public class JoinGameHandler implements Handler {
         var joinRequest = new Gson().fromJson(context.body(), JoinRequest.class);
         gameService.joinGame(joinRequest, authData.username());
 
-        context.json("{}");
+        context.result("{}");
     }
 }

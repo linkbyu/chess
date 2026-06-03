@@ -7,7 +7,8 @@ import model.AuthData;
 import static ui.EscapeSequences.*;
 import static ui.EscapeSequences.RESET_TEXT_COLOR;
 
-public abstract class ClientUI {
+public abstract sealed class ClientUI
+        permits GameUI, PostloginUI, PreloginUI {
 
     protected ServerFacade server;
     protected AuthData authData;

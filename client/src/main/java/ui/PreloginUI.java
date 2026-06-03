@@ -7,7 +7,7 @@ import model.params.RegisterRequest;
 
 import static ui.EscapeSequences.*;
 
-public class PreloginUI extends ClientUI {
+public final class PreloginUI extends ClientUI {
 
     public final String replIcon = SET_TEXT_COLOR_RED + "[LOGGED_OUT]";
 
@@ -33,7 +33,7 @@ public class PreloginUI extends ClientUI {
 
 
     @Override
-    public String commandMenu(String command, String[] params) throws ResponseException {
+    String commandMenu(String command, String[] params) throws ResponseException {
         return switch(command) {
             case "register" -> registerSetup(params);
             case "login" -> loginSetup(params);
@@ -51,6 +51,7 @@ public class PreloginUI extends ClientUI {
     private String registerSetup(String... params) throws ResponseException {
         if (params.length == 3) {
             authData = server.register(new RegisterRequest(params[0], params[1], params[2]));
+            setShiftUIFlag(true);
             return "Successfully registered.";
         }
         throw new ResponseException(ResponseException.Code.BadRequest, "Expected only: <USERNAME> <PASSWORD> <EMAIL>");

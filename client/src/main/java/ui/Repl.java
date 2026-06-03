@@ -10,12 +10,12 @@ import java.util.Scanner;
 import static ui.EscapeSequences.*;
 
 public class Repl {
-    private final ServerFacade server;
+    private final ServerFacade facade;
     private ClientUI client;
 
     public Repl(String serverUrl) {
-        server = new ServerFacade(serverUrl);
-        client = new PreloginUI(server);
+        facade = new ServerFacade(serverUrl);
+        client = new PreloginUI(facade);
     }
 
 
@@ -36,7 +36,6 @@ public class Repl {
 
             } catch (Exception ex) {
                 System.out.print(ex.getMessage());
-                //System.out.print(errorMessage(ex));
             }
             System.out.println();
         }
@@ -54,19 +53,11 @@ public class Repl {
     private String eval(String input) {
         try {
             String[] tokens = input.toLowerCase().split(" ");
-            String command = (tokens.length > 0) ? tokens[0] : "help";
+            String command = (tokens.length > 0) ? tokens[0] : "";
             String[] params = Arrays.copyOfRange(tokens, 1, tokens.length);
 
             String result = client.commandMenu(command, params);
-            switch(command) {
-                case "register", "login":
-                    userAuth = client.getAuth();
-                    break;
-                case "logout":
-                    userAuth = null;
-                    client = new PreloginUI(server);
-                    break;
-            }
+            conditionalSwitchUI(command, params);
 
             return result;
 
@@ -75,8 +66,31 @@ public class Repl {
         }
     }
 
-    private String errorMessage(Exception ex) {
-        return "";
+    private boolean ShiftUIFlag;
+
+    private void conditionalSwitchUI(String command, String[] params) throws ResponseException {
+        if (ShiftUIFlag) {
+            switch (command) {
+                case "register", "login":
+                    userAuth = client.getAuth();
+                    client = new PostloginUI(facade, userAuth);
+                    break;
+                case "logout":
+                    userAuth = null;
+                    client = new PreloginUI(facade);
+                    break;
+                case "join", "observe":
+                    var gameList = facade.listGames(userAuth.authToken()).gameList();
+                    var desiredGame = gameList.get(Integer.parseInt(params[0]) - 1);
+                    client = new GameUI(facade, userAuth, desiredGame);
+                    break;
+            }
+            ShiftUIFlag = false;
+        }
     }
 
+    // TO-DO : why is this function not working
+    void setShiftUIFlag(boolean shiftUIFlag) {
+        this.ShiftUIFlag = shiftUIFlag;
+    }
 }

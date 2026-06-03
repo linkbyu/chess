@@ -3,10 +3,11 @@ package ui;
 import client.ServerFacade;
 import exception.ResponseException;
 import model.AuthData;
+import model.params.CreateRequest;
 
 import static ui.EscapeSequences.*;
 
-public class PostloginUI extends ClientUI{
+public final class PostloginUI extends ClientUI{
 
     private final String username;
     private final String authToken;
@@ -23,7 +24,7 @@ public class PostloginUI extends ClientUI{
     @Override
     public String help() {
         var builder = new StringBuilder();
-        builder.append(helpTextColor("create <GameName>", "a new game"));
+        builder.append(helpTextColor("create <GAME_NAME>", "a new game"));
         builder.append(helpTextColor("list", "show current games"));
         builder.append(helpTextColor("join <GAME #> [WHITE|BLACK]", "join a game"));
 
@@ -40,7 +41,7 @@ public class PostloginUI extends ClientUI{
             case "list" -> server.listGames(authToken).toString();
             //case "join" -> server.joinGame();
 
-            //case "create" -> server.createGame();
+            case "create" -> createGame(params[0]);
             //case "observe" -> server.observe();
 
             case "logout" -> {
@@ -54,6 +55,15 @@ public class PostloginUI extends ClientUI{
             }
 
         };
+    }
+
+    private String createGame(String... params) throws ResponseException {
+        if (params.length == 1) {
+            server.createGame(authToken, new CreateRequest(params[0]));
+
+            return "";
+        }
+        throw new ResponseException(ResponseException.Code.BadRequest, "Expected only: <GAME_NAME>");
     }
 
 }
