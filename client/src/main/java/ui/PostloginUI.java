@@ -8,13 +8,12 @@ import static ui.EscapeSequences.*;
 
 public class PostloginUI extends ClientUI{
 
-    private ServerFacade server;
     private final String username;
     private final String authToken;
     public static String replICON;
 
     public PostloginUI(ServerFacade server, AuthData authData) {
-        this.server = server;
+        super(server, authData);
         username = authData.username();
         authToken = authData.authToken();
         replICON = String.format(SET_TEXT_COLOR_GREEN + "[%s]", username);
@@ -26,9 +25,9 @@ public class PostloginUI extends ClientUI{
         var builder = new StringBuilder();
         builder.append(helpTextColor("create <GameName>", "a new game"));
         builder.append(helpTextColor("list", "show current games"));
-        builder.append(helpTextColor("join <ID> [WHITE|BLACK]", "join a game"));
+        builder.append(helpTextColor("join <GAME #> [WHITE|BLACK]", "join a game"));
 
-        builder.append(helpTextColor("observe <ID>", "observe a game"));
+        builder.append(helpTextColor("observe <GAME #>", "observe a game"));
         builder.append(helpTextColor("logout", "when you are done"));
         builder.append(helpTextColor("help", "show possible commands again"));
 

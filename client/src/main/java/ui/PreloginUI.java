@@ -2,7 +2,6 @@ package ui;
 
 import client.ServerFacade;
 import exception.ResponseException;
-import model.AuthData;
 import model.params.LoginRequest;
 import model.params.RegisterRequest;
 
@@ -10,11 +9,10 @@ import static ui.EscapeSequences.*;
 
 public class PreloginUI extends ClientUI {
 
-    private ServerFacade server;
     public final String replIcon = SET_TEXT_COLOR_RED + "[LOGGED_OUT]";
 
     public PreloginUI(ServerFacade server) {
-        this.server = server;
+        super(server, null);
     }
 
 
@@ -52,16 +50,16 @@ public class PreloginUI extends ClientUI {
 
     private String registerSetup(String... params) throws ResponseException {
         if (params.length == 3) {
-            AuthData authData = server.register(new RegisterRequest(params[0], params[1], params[2]));
-
+            authData = server.register(new RegisterRequest(params[0], params[1], params[2]));
+            return "Successfully registered.";
         }
         throw new ResponseException(ResponseException.Code.BadRequest, "Expected only: <USERNAME> <PASSWORD> <EMAIL>");
     }
 
     private String loginSetup(String... params) throws ResponseException {
         if (params.length == 2){
-            server.login(new LoginRequest(params[0], params[1]));
-
+            authData = server.login(new LoginRequest(params[0], params[1]));
+            return String.format("Logged in as user %s.", params[0]);
         }
         throw new ResponseException(ResponseException.Code.BadRequest, "Expected only: <USERNAME> <PASSWORD>");
     }
