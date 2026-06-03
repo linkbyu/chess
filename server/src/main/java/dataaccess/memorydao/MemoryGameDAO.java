@@ -6,9 +6,10 @@ import model.GameData;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 public class MemoryGameDAO implements GameDAO {
-    private final Collection<GameData> gameList;
+    private final List<GameData> gameList;
 
     public MemoryGameDAO() {
         gameList = new ArrayList<>();
@@ -31,7 +32,7 @@ public class MemoryGameDAO implements GameDAO {
     }
 
     @Override
-    public Collection<GameData> listGames() throws DataAccessException {
+    public List<GameData> listGames() throws DataAccessException {
         return gameList;
     }
 

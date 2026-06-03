@@ -4,12 +4,12 @@ import com.google.gson.*;
 import io.javalin.http.Context;
 import io.javalin.http.Handler;
 import model.GameData;
+import model.GameCatalog;
 import org.jetbrains.annotations.NotNull;
 import service.GameService;
 import service.UserService;
 
-import java.util.Collection;
-import java.util.Map;
+import java.util.List;
 
 public class ListGameHandler implements Handler {
     private final UserService userService;
@@ -25,8 +25,8 @@ public class ListGameHandler implements Handler {
         String authToken = context.header("authorization");
         userService.verifyAuth(authToken);
 
-        Collection<GameData> games = gameService.listGames();
-        var result = Map.of("games", games);
-        context.json(new Gson().toJson(result));
+        List<GameData> games = gameService.listGames();
+        var gameList = new GameCatalog(games);
+        context.result(new Gson().toJson(gameList));
     }
 }

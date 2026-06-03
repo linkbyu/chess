@@ -3,6 +3,7 @@ package server;
 import com.google.gson.Gson;
 import io.javalin.http.Context;
 import io.javalin.http.Handler;
+import model.params.CreateResult;
 import org.jetbrains.annotations.NotNull;
 import service.GameService;
 import service.UserService;
@@ -24,6 +25,6 @@ public class CreateGameHandler implements Handler {
 
         var createRequest = new Gson().fromJson(context.body(), CreateRequest.class);
         int gameID = gameService.createGame(createRequest);
-        context.json("{ \"gameID\": " + gameID + " }");
+        context.result(new Gson().toJson(new CreateResult(gameID)) );
     }
 }

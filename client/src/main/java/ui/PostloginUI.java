@@ -38,11 +38,11 @@ public class PostloginUI extends ClientUI{
     @Override
     String commandMenu(String command, String[] params) throws ResponseException {
         return switch(command) {
-            case "list" -> server.listGames(authToken);
-            case "join" -> server.joinGame();
+            case "list" -> server.listGames(authToken).toString();
+            //case "join" -> server.joinGame();
 
-            case "create" -> server.createGame();
-            case "observe" -> server.observe();
+            //case "create" -> server.createGame();
+            //case "observe" -> server.observe();
 
             case "logout" -> {
                 server.logout(authToken);

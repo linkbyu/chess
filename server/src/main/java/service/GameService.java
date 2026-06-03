@@ -11,6 +11,7 @@ import model.params.CreateRequest;
 import model.params.JoinRequest;
 
 import java.util.Collection;
+import java.util.List;
 
 import static java.lang.Math.abs;
 
@@ -23,7 +24,7 @@ public class GameService {
         this.gameDAO = gameDAO;
     }
 
-    public Collection<GameData> listGames() throws DataAccessException {
+    public List<GameData> listGames() throws DataAccessException {
         return gameDAO.listGames();
     }
 

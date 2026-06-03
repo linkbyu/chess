@@ -29,10 +29,10 @@ public class Repl {
 
             try {
                 result = eval(line);
-                System.out.print(result);
-                switch(result){ // Here
+                //System.out.print(result);
+                /*switch(result){
                     case "logout" -> ;
-                }
+                }*/
 
             } catch (Exception ex) {
                 System.out.print(ex.getMessage());

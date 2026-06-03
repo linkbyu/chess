@@ -55,7 +55,7 @@ public class PreloginUI extends ClientUI {
             AuthData authData = server.register(new RegisterRequest(params[0], params[1], params[2]));
 
         }
-        throw new ResponseException(ResponseException.Code.ClientError, "Expected only: <USERNAME> <PASSWORD> <EMAIL>");
+        throw new ResponseException(ResponseException.Code.BadRequest, "Expected only: <USERNAME> <PASSWORD> <EMAIL>");
     }
 
     private String loginSetup(String... params) throws ResponseException {
@@ -63,6 +63,6 @@ public class PreloginUI extends ClientUI {
             server.login(new LoginRequest(params[0], params[1]));
 
         }
-        throw new ResponseException(ResponseException.Code.ClientError, "Expected only: <USERNAME> <PASSWORD>");
+        throw new ResponseException(ResponseException.Code.BadRequest, "Expected only: <USERNAME> <PASSWORD>");
     }
 }
