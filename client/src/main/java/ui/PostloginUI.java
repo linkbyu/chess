@@ -58,7 +58,7 @@ public final class PostloginUI extends ClientUI{
 
     private String listGames() throws ResponseException {
         var gameCatalog = facade.listGames(authToken);
-        List<GameData> games = gameCatalog.gameList();
+        List<GameData> games = gameCatalog.games();
 
         if (!games.isEmpty()) {
             var builder = new StringBuilder();
@@ -123,7 +123,7 @@ public final class PostloginUI extends ClientUI{
         try {
             int requestedNum = Integer.parseInt(listGameNum);
             var gameCatalog = facade.listGames(authToken);
-            List<GameData> games = gameCatalog.gameList();
+            List<GameData> games = gameCatalog.games();
 
             return games.get(requestedNum - 1);
         } catch(NumberFormatException | NullPointerException e){

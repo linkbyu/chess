@@ -82,7 +82,7 @@ public class Repl {
                 client = new PreloginUI(facade);
                 break;
             case "join", "observe":
-                var gameList = facade.listGames(userAuth.authToken()).gameList();
+                var gameList = facade.listGames(userAuth.authToken()).games();
                 var desiredGame = gameList.get(Integer.parseInt(params[0]) - 1);
                 client = new GameUI(facade, userAuth, desiredGame);
 
