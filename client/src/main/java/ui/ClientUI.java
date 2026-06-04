@@ -14,7 +14,7 @@ public abstract sealed class ClientUI
     protected ServerFacade facade;
     protected AuthData authData;
     public String replIcon = SET_TEXT_COLOR_LIGHT_GREY + "[UNKNOWN]";
-    private boolean UIShift;
+    private boolean uiShift;
 
     public ClientUI(ServerFacade server, AuthData authData) {
         facade = server;
@@ -38,11 +38,11 @@ public abstract sealed class ClientUI
     }
 
 
-    public boolean isUIShift() {
-        return UIShift;
+    public boolean isUiShift() {
+        return uiShift;
     }
 
-    protected void setUIShift(boolean UIShift) {
-        this.UIShift = UIShift;
+    protected void setUiShift(boolean uiShift) {
+        this.uiShift = uiShift;
     }
 }

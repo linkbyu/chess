@@ -57,9 +57,9 @@ public class Repl {
         String[] params = Arrays.copyOfRange(tokens, 1, tokens.length);
 
         String result = client.commandMenu(command, params);
-        if (client.isUIShift()) {
+        if (client.isUiShift()) {
             switchUI(command, params);
-            client.setUIShift(false);
+            client.setUiShift(false);
             if ( command.equals("join") || command.equals("observe") ) {
                 result += "\n" + client.commandMenu("draw", null) + client.help();
             }

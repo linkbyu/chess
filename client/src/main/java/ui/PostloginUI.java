@@ -99,7 +99,7 @@ public final class PostloginUI extends ClientUI{
             String gameName = desiredGame.gameName();
 
             facade.joinGame(authToken, new JoinRequest(playerColor, gameID));
-            setUIShift(true);
+            setUiShift(true);
             String joinedTeam = switch(playerColor){
                 case WHITE -> "White";
                 case BLACK -> "Black";
@@ -137,7 +137,7 @@ public final class PostloginUI extends ClientUI{
             var desiredGame = getGame(params[0]);
             String gameName = desiredGame.gameName();
 
-            setUIShift(true);
+            setUiShift(true);
             return String.format("""
                     Observing game "%s". (From the White Team's view)
                     White: %s
@@ -148,7 +148,7 @@ public final class PostloginUI extends ClientUI{
 
     private String logout() throws ResponseException {
         facade.logout(authToken);
-        setUIShift(true);
+        setUiShift(true);
         return "Logged out.";
     }
 

@@ -50,7 +50,7 @@ public final class PreloginUI extends ClientUI {
     private String registerSetup(String[] params) throws ResponseException {
         if (params.length == 3) {
             authData = facade.register(new RegisterRequest(params[0], params[1], params[2]));
-            setUIShift(true);
+            setUiShift(true);
             return "Successfully registered.\n" + String.format("Logged in as user %s.", params[0]);
         }
         throw new ResponseException(ResponseException.Code.BadRequest, "Expected: \"register\" <USERNAME> <PASSWORD> <EMAIL>");
@@ -59,7 +59,7 @@ public final class PreloginUI extends ClientUI {
     private String loginSetup(String[] params) throws ResponseException {
         if (params.length == 2){
             authData = facade.login(new LoginRequest(params[0], params[1]));
-            setUIShift(true);
+            setUiShift(true);
             return String.format("Logged in as user %s.", params[0]);
         }
         throw new ResponseException(ResponseException.Code.BadRequest, "Expected: \"login\" <USERNAME> <PASSWORD>");

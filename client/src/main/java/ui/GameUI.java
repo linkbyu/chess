@@ -12,8 +12,6 @@ import chess.ChessGame.TeamColor;
 
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.List;
 
 import static ui.EscapeSequences.*;
 
@@ -44,7 +42,7 @@ public final class GameUI extends ClientUI {
         return switch(command) {
             case "draw" -> printBoardSetup();
             case "leave" -> {
-                setUIShift(true);
+                setUiShift(true);
                 yield String.format("Leaving \"%s\"", gameData.gameName());
             }
             case "help" -> help();
@@ -116,11 +114,11 @@ public final class GameUI extends ClientUI {
         out.print(RESET_TEXT_COLOR);
     }
 
-    private static final String letterSpacer = " ";
+    private static final String LETTER_SPACER = " ";
     private void drawHorizontalBorder(PrintStream out, String letter) {
-        out.print(letterSpacer);
+        out.print(LETTER_SPACER);
         out.print(letter);
-        out.print(letterSpacer);
+        out.print(LETTER_SPACER);
     }
 
     private boolean evenRow;
@@ -203,7 +201,7 @@ public final class GameUI extends ClientUI {
 
     private void printRowLabelSquare(PrintStream out, int rowNum) {
         setBorderColor(out);;
-        out.print(letterSpacer + rowNum + letterSpacer);
+        out.print(LETTER_SPACER + rowNum + LETTER_SPACER);
 
     }
 
