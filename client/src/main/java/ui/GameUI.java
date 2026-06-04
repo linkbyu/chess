@@ -12,6 +12,8 @@ import chess.ChessGame.TeamColor;
 
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.List;
 
 import static ui.EscapeSequences.*;
 
@@ -75,21 +77,24 @@ public final class GameUI extends ClientUI {
 
         out.print(ERASE_SCREEN);
 
-        drawLetterLabels(out);
+        drawLetterLabels(out, teamColor);
         drawChessBoard(out, teamColor);
-        drawLetterLabels(out);
+        drawLetterLabels(out, teamColor);
 
     }
 
     private static final int BOARD_LENGTH_LIMIT_IN_SQUARES = 9;
 
-    private void drawLetterLabels(PrintStream out) {
+    private void drawLetterLabels(PrintStream out, TeamColor teamColor) {
         setBorderColor(out);
         emptyBorderSquare(out);
 
-        String[] letterLabels = { "a", "b", "c", "d", "e", "f", "g", "h" };
+        String[] colLabels = switch(teamColor){
+            case WHITE -> new String[] { "a", "b", "c", "d", "e", "f", "g", "h" };
+            case BLACK -> new String[] { "h", "g", "f", "e", "d", "c", "b", "a"};
+        };
         for (int boardCol = 1; boardCol < BOARD_LENGTH_LIMIT_IN_SQUARES; ++boardCol) {
-            drawHorizontalBorder(out, letterLabels[boardCol - 1]);
+            drawHorizontalBorder(out, colLabels[boardCol - 1]);
         }
 
         emptyBorderSquare(out);
@@ -122,21 +127,22 @@ public final class GameUI extends ClientUI {
 
     private void drawChessBoard(PrintStream out, TeamColor teamColor) {
         setBorderColor(out);
+        switch(teamColor) {
+            case WHITE -> drawChessBoardWhite(out);
+            case BLACK -> drawChessBoardBlack(out);
+        }
+    }
 
-        int[] rowLabels = switch(teamColor){
-            case WHITE -> new int[] {1, 2, 3, 4, 5, 6, 7, 8};
-            case BLACK -> new int[] {8, 7, 6, 5, 4, 3, 2, 1};
-        };
-
-        for (int boardRow = 1; boardRow < BOARD_LENGTH_LIMIT_IN_SQUARES; ++boardRow) {
-            int rowNum = rowLabels[boardRow - 1];
+    private void drawChessBoardWhite(PrintStream out) {
+        for (int rowNum = 8; rowNum > 0; --rowNum) {
+            //int rowNum = rowLabels.get(boardRow - 1);
             evenRow = (rowNum % 2) == 0;
 
             printRowLabelSquare(out, rowNum);
 
-            for (int boardCol = 1; boardCol < BOARD_LENGTH_LIMIT_IN_SQUARES; ++boardCol) {
-                setBoardSquareColor(out, evenRow, boardCol);
-                printBoardSquare(out, new ChessPosition(boardRow, boardCol));
+            for (int colNum = 8; colNum > 0; --colNum) {
+                setBoardSquareColor(out, evenRow, colNum);
+                printBoardSquare(out, new ChessPosition(rowNum, colNum));
             }
 
 
@@ -144,7 +150,24 @@ public final class GameUI extends ClientUI {
             resetPrintColor(out);
             out.println();
         }
+    }
 
+    private void drawChessBoardBlack(PrintStream out) {
+        for (int rowNum = 1; rowNum < BOARD_LENGTH_LIMIT_IN_SQUARES; ++rowNum) {
+            evenRow = (rowNum % 2) == 0;
+
+            printRowLabelSquare(out, rowNum);
+
+            for (int colNum = 1; colNum < BOARD_LENGTH_LIMIT_IN_SQUARES; ++colNum) {
+                setBoardSquareColor(out, evenRow, colNum);
+                printBoardSquare(out, new ChessPosition(rowNum, colNum));
+            }
+
+
+            printRowLabelSquare(out, rowNum);
+            resetPrintColor(out);
+            out.println();
+        }
     }
 
     private void setBoardSquareColor(PrintStream out, boolean evenRow, int boardCol) {

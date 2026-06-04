@@ -11,7 +11,7 @@ import java.util.Objects;
  */
 public class ChessPiece implements Cloneable{
 
-    private final ChessGame.TeamColor pieceColor;
+    private ChessGame.TeamColor pieceColor;
     private PieceType type;
     private boolean hasNotMoved;
     private boolean did2Forward;
