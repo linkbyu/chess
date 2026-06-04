@@ -132,9 +132,18 @@ public final class PostloginUI extends ClientUI{
         }
     }
 
-    private String observeGame(String[] params) {
+    private String observeGame(String[] params) throws ResponseException {
+        if (params.length == 1) {
+            var desiredGame = getGame(params[0]);
+            String gameName = desiredGame.gameName();
 
-        return "";
+            setUIShift(true);
+            return String.format("""
+                    Observing game "%s". (From the White Team's view)
+                    White: %s
+                    Black: %s""", gameName, desiredGame.whiteUsername(), desiredGame.blackUsername());
+        }
+        throw new ResponseException(ResponseException.Code.BadRequest, "Expected: \"observe\" <GAME #>");
     }
 
     private String logout() throws ResponseException {

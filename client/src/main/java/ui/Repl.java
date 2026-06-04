@@ -56,12 +56,16 @@ public class Repl {
         String command = (tokens.length > 0) ? tokens[0] : "";
         String[] params = Arrays.copyOfRange(tokens, 1, tokens.length);
 
-        //String result = RESPONSE_SPACING;
         String result = client.commandMenu(command, params);
         if (client.isUIShift()) {
             switchUI(command, params);
             client.setUIShift(false);
-            result += "\n" + client.help();
+            if ( command.equals("join") || command.equals("observe") ) {
+                result += "\n" + client.commandMenu("draw", null) + client.help();
+            }
+            else {
+                result += "\n" + client.help();
+            }
         }
         return result;
     }
@@ -81,6 +85,7 @@ public class Repl {
                 var gameList = facade.listGames(userAuth.authToken()).gameList();
                 var desiredGame = gameList.get(Integer.parseInt(params[0]) - 1);
                 client = new GameUI(facade, userAuth, desiredGame);
+
                 break;
             case "leave":
                 client = new PostloginUI(facade, userAuth);
