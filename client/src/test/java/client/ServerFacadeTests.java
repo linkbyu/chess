@@ -101,7 +101,7 @@ public class ServerFacadeTests {
     @Test
     void createGameSuccess() throws ResponseException {
         var createResult = facade.createGame(exampleAuthData.authToken(), new CreateRequest("duel123"));
-        var gameList = facade.listGames(exampleAuthData.authToken()).gameList();
+        var gameList = facade.listGames(exampleAuthData.authToken()).games();
         GameData newGame = gameList.getFirst();
 
         assertEquals(createResult.gameID(), newGame.gameID());
@@ -126,7 +126,7 @@ public class ServerFacadeTests {
         var game2CreateResult = facade.createGame(exampleAuthData.authToken(), new CreateRequest(gameName2));
         var game3CreateResult = facade.createGame(exampleAuthData.authToken(), new CreateRequest(gameName3));
 
-        var gameList = facade.listGames(exampleAuthData.authToken()).gameList();
+        var gameList = facade.listGames(exampleAuthData.authToken()).games();
         GameData game1 = gameList.get(0);
         GameData game2 = gameList.get(1);
         GameData game3 = gameList.get(2);
@@ -141,7 +141,7 @@ public class ServerFacadeTests {
 
     @Test
     void listGamesEmptyCatalog() throws ResponseException {
-        var gameList = facade.listGames(exampleAuthData.authToken()).gameList();
+        var gameList = facade.listGames(exampleAuthData.authToken()).games();
         assertTrue(gameList.isEmpty());
     }
 
@@ -151,7 +151,7 @@ public class ServerFacadeTests {
 
         facade.joinGame(exampleAuthData.authToken(),
                         new JoinRequest(ChessGame.TeamColor.WHITE, createResult.gameID()));
-        var gameList = facade.listGames(exampleAuthData.authToken()).gameList();
+        var gameList = facade.listGames(exampleAuthData.authToken()).games();
         var game = gameList.getFirst();
 
         assertEquals("practiceWithMe!", game.gameName());
@@ -179,7 +179,7 @@ public class ServerFacadeTests {
         facade.joinGame(authDataJoe.authToken(), joinWhiteRequest);
         facade.joinGame(authDataBob.authToken(), joinBlackRequest);
 
-        var gameList = facade.listGames(exampleAuthData.authToken()).gameList();
+        var gameList = facade.listGames(exampleAuthData.authToken()).games();
         var game = gameList.getFirst();
 
 
