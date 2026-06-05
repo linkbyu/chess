@@ -10,12 +10,12 @@ import java.util.Scanner;
 import static ui.EscapeSequences.*;
 
 public class Repl {
-    private final ServerFacade facade;
+    private final ServerFacade serverFacade;
     private ClientUI client;
 
     public Repl(String serverUrl) {
-        facade = new ServerFacade(serverUrl);
-        client = new PreloginUI(facade);
+        serverFacade = new ServerFacade(serverUrl);
+        client = new PreloginUI(serverFacade);
     }
 
 
@@ -75,20 +75,20 @@ public class Repl {
         switch (command) {
             case "register", "r", "login", "l":
                 userAuth = client.getAuth();
-                client = new PostloginUI(facade, userAuth);
+                client = new PostloginUI(serverFacade, userAuth);
                 break;
             case "logout":
                 userAuth = null;
-                client = new PreloginUI(facade);
+                client = new PreloginUI(serverFacade);
                 break;
             case "join", "observe":
-                var gameList = facade.listGames(userAuth.authToken()).games();
+                var gameList = serverFacade.listGames(userAuth.authToken()).games();
                 var desiredGame = gameList.get(Integer.parseInt(params[0]) - 1);
-                client = new GameUI(facade, userAuth, desiredGame);
+                client = new GameUI(serverFacade, userAuth, desiredGame);
 
                 break;
             case "leave":
-                client = new PostloginUI(facade, userAuth);
+                client = new PostloginUI(serverFacade, userAuth);
                 break;
         }
     }

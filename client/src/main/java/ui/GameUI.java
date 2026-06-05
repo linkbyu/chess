@@ -4,24 +4,30 @@ import chess.ChessBoard;
 import chess.ChessGame;
 import chess.ChessPiece;
 import chess.ChessPosition;
+import client.websocket.MessageHandler;
 import client.ServerFacade;
+import client.websocket.WebSocketFacade;
 import exception.ResponseException;
 import model.AuthData;
 import model.GameData;
 import chess.ChessGame.TeamColor;
+import websocket.messages.ServerMessage;
 
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 
 import static ui.EscapeSequences.*;
 
-public final class GameUI extends ClientUI {
+public final class GameUI extends ClientUI implements MessageHandler {
 
-    private GameData gameData;
-    private ChessGame game;
+    private final GameData gameData;
+    private final ChessGame game;
+    private final WebSocketFacade ws;
 
-    public GameUI(ServerFacade server, AuthData authData, GameData gameData) {
+    public GameUI(ServerFacade server, AuthData authData, GameData gameData) throws ResponseException {
         super(server, authData);
+        ws = new WebSocketFacade(server.getServerUrl(), this);
+
         this.gameData = gameData;
         game = gameData.game();
         replIcon = String.format("[Game \"%s\"]", gameData.gameName());
@@ -31,25 +37,28 @@ public final class GameUI extends ClientUI {
     public String help() {
         var builder = new StringBuilder();
 
-        builder.append(helpTextColor("draw", "to redraw the board"));
+        builder.append(helpTextColor("\"redraw\" or \"r\"", "to redraw the board"));
+        builder.append(helpTextColor("\"move\" or \"m\" <source> <destination> <promotion piece if applicable>",
+                                     "to move a piece"));
+        builder.append(helpTextColor("\"highlight\" or \"hl\" <PiecePosition>",
+                                    "to highlight the legal moves for a given piece"));
+        builder.append(helpTextColor("resign", "to forfeit the game"));
         builder.append(helpTextColor("leave", "to exit game"));
-        builder.append(helpTextColor("help", "show possible commands again"));
+        builder.append(helpTextColor("\"help\" or \"h\"", "show possible commands again"));
         return builder.toString();
     }
 
     @Override
     String commandMenu(String command, String[] params) throws ResponseException {
         return switch(command) {
-            case "draw" -> printBoardSetup();
+            case "redraw", "r" -> printBoardSetup();
             case "leave" -> {
                 setUiShift(true);
                 yield String.format("Leaving \"%s\"", gameData.gameName());
             }
-            case "help" -> help();
-            default -> {
-                System.out.println(SET_TEXT_COLOR_RED + "Unknown command. Please try again." + RESET_TEXT_COLOR);
-                yield help();
-            }
+            case "help", "h" -> help();
+            default -> throw new ResponseException(ResponseException.Code.BadRequest,
+                        "Unknown command. Please try again.\n" + help());
         };
     }
 
@@ -134,11 +143,11 @@ public final class GameUI extends ClientUI {
     private void drawChessBoardWhite(PrintStream out) {
         for (int rowNum = 8; rowNum > 0; --rowNum) {
             //int rowNum = rowLabels.get(boardRow - 1);
-            evenRow = (rowNum % 2) == 0;
+            evenRow = (rowNum % 2) != 0;
 
             printRowLabelSquare(out, rowNum);
 
-            for (int colNum = 8; colNum > 0; --colNum) {
+            for (int colNum = 1; colNum < 9; ++colNum) {
                 setBoardSquareColor(out, evenRow, colNum);
                 printBoardSquare(out, new ChessPosition(rowNum, colNum));
             }
@@ -152,11 +161,11 @@ public final class GameUI extends ClientUI {
 
     private void drawChessBoardBlack(PrintStream out) {
         for (int rowNum = 1; rowNum < BOARD_LENGTH_LIMIT_IN_SQUARES; ++rowNum) {
-            evenRow = (rowNum % 2) == 0;
+            evenRow = (rowNum % 2) != 0;
 
             printRowLabelSquare(out, rowNum);
 
-            for (int colNum = 1; colNum < BOARD_LENGTH_LIMIT_IN_SQUARES; ++colNum) {
+            for (int colNum = 8; colNum > 0; --colNum) {
                 setBoardSquareColor(out, evenRow, colNum);
                 printBoardSquare(out, new ChessPosition(rowNum, colNum));
             }
@@ -235,7 +244,8 @@ public final class GameUI extends ClientUI {
     }
 
 
-
-
+    @Override
+    public void notify(ServerMessage serverMessage) {
+    }
 
 }

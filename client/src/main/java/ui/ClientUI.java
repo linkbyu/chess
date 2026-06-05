@@ -11,13 +11,13 @@ import static ui.Repl.RESPONSE_SPACING;
 public abstract sealed class ClientUI
         permits GameUI, PostloginUI, PreloginUI {
 
-    protected ServerFacade facade;
+    protected ServerFacade serverFacade;
     protected AuthData authData;
     public String replIcon = SET_TEXT_COLOR_LIGHT_GREY + "[UNKNOWN]";
     private boolean uiShift;
 
     public ClientUI(ServerFacade server, AuthData authData) {
-        facade = server;
+        serverFacade = server;
         this.authData = authData;
     }
 

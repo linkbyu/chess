@@ -57,7 +57,7 @@ public final class PostloginUI extends ClientUI{
     }
 
     private String listGames() throws ResponseException {
-        var gameCatalog = facade.listGames(authToken);
+        var gameCatalog = serverFacade.listGames(authToken);
         List<GameData> games = gameCatalog.games();
 
         if (!games.isEmpty()) {
@@ -84,7 +84,7 @@ public final class PostloginUI extends ClientUI{
     private String createGame(String[] params) throws ResponseException {
         if (params.length == 1) {
             String gameName = params[0];
-            facade.createGame(authToken, new CreateRequest(gameName));
+            serverFacade.createGame(authToken, new CreateRequest(gameName));
 
             return String.format("Successfully created game \"%s\".", gameName);
         }
@@ -98,7 +98,7 @@ public final class PostloginUI extends ClientUI{
             int gameID = desiredGame.gameID();
             String gameName = desiredGame.gameName();
 
-            facade.joinGame(authToken, new JoinRequest(playerColor, gameID));
+            serverFacade.joinGame(authToken, new JoinRequest(playerColor, gameID));
             setUiShift(true);
             String joinedTeam = switch(playerColor){
                 case WHITE -> "White";
@@ -122,11 +122,11 @@ public final class PostloginUI extends ClientUI{
     private GameData getGame(String listGameNum) throws ResponseException{
         try {
             int requestedNum = Integer.parseInt(listGameNum);
-            var gameCatalog = facade.listGames(authToken);
+            var gameCatalog = serverFacade.listGames(authToken);
             List<GameData> games = gameCatalog.games();
 
             return games.get(requestedNum - 1);
-        } catch(NumberFormatException | NullPointerException e){
+        } catch(Exception e){
             throw new ResponseException(ResponseException.Code.BadRequest,
                     "Invalid <GAME #>...Please check the available games again.");
         }
@@ -147,7 +147,7 @@ public final class PostloginUI extends ClientUI{
     }
 
     private String logout() throws ResponseException {
-        facade.logout(authToken);
+        serverFacade.logout(authToken);
         setUiShift(true);
         return "Logged out.";
     }

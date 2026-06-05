@@ -131,4 +131,7 @@ public class ServerFacade {
         return (status / 100) == 2;
     }
 
+    public String getServerUrl() {
+        return serverUrl;
+    }
 }

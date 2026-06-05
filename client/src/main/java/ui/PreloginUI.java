@@ -49,7 +49,7 @@ public final class PreloginUI extends ClientUI {
 
     private String registerSetup(String[] params) throws ResponseException {
         if (params.length == 3) {
-            authData = facade.register(new RegisterRequest(params[0], params[1], params[2]));
+            authData = serverFacade.register(new RegisterRequest(params[0], params[1], params[2]));
             setUiShift(true);
             return "Successfully registered.\n" + String.format("Logged in as user %s.", params[0]);
         }
@@ -58,7 +58,7 @@ public final class PreloginUI extends ClientUI {
 
     private String loginSetup(String[] params) throws ResponseException {
         if (params.length == 2){
-            authData = facade.login(new LoginRequest(params[0], params[1]));
+            authData = serverFacade.login(new LoginRequest(params[0], params[1]));
             setUiShift(true);
             return String.format("Logged in as user %s.", params[0]);
         }
