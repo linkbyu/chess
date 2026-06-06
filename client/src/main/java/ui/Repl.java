@@ -28,7 +28,7 @@ public class Repl {
         var result = "";
         while ( true ) {
             System.out.print(result);
-            printPrompt();
+            client.printPrompt();
             String line = scanner.nextLine();
 
             try {
@@ -45,9 +45,6 @@ public class Repl {
     }
 
 
-    private void printPrompt() {
-        System.out.print("\n" + client.replIcon + RESET_TEXT_COLOR + " >>> ");
-    }
 
     static final String RESPONSE_SPACING = "  ";
 

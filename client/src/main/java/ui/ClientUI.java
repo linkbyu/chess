@@ -13,7 +13,7 @@ public abstract sealed class ClientUI
 
     protected ServerFacade serverFacade;
     protected AuthData authData;
-    public String replIcon = SET_TEXT_COLOR_LIGHT_GREY + "[UNKNOWN]";
+    protected String replIcon = SET_TEXT_COLOR_LIGHT_GREY + "[UNKNOWN]";
     private boolean uiShift;
 
     public ClientUI(ServerFacade server, AuthData authData) {
@@ -44,5 +44,9 @@ public abstract sealed class ClientUI
 
     protected void setUiShift(boolean uiShift) {
         this.uiShift = uiShift;
+    }
+
+    public void printPrompt() {
+        System.out.print("\n" + replIcon + RESET_TEXT_COLOR + " >>> ");
     }
 }

@@ -6,6 +6,7 @@ import dataaccess.mysqldao.MySqlGameDAO;
 import dataaccess.mysqldao.MySqlUserDAO;
 import dataaccess.exception.DataAccessException;
 import io.javalin.*;
+import server.websocket.WebSocketHandler;
 import service.ClearService;
 import service.GameService;
 import service.UserService;
@@ -19,6 +20,7 @@ public class Server {
     private GameService gameService;
     private ClearService clearService;
 
+    private final WebSocketHandler webSocketHandler;
     private final Javalin javalin;
 
     public Server() {
@@ -29,6 +31,8 @@ public class Server {
         }
         initializeServices(userDAO, gameDAO, authDAO);
 
+        webSocketHandler = new WebSocketHandler();
+
         javalin = Javalin.create(config -> config.staticFiles.add("web"))
                 .delete("/db", ctx -> clearService.clear() )
                 .post("/user", new RegisterHandler(userService) )
@@ -37,7 +41,12 @@ public class Server {
                 .get("/game", new ListGameHandler(userService, gameService) )
                 .post("/game", new CreateGameHandler(userService, gameService) )
                 .put("/game", new JoinGameHandler(userService, gameService) )
-                .exception(Exception.class, new ExceptionHandler() );
+                .exception(Exception.class, new ExceptionHandler() )
+                .ws("/ws", wsConfig -> {
+                    wsConfig.onConnect(webSocketHandler);
+                    wsConfig.onMessage(webSocketHandler);
+                    wsConfig.onClose(webSocketHandler);
+                });
 
 
     }

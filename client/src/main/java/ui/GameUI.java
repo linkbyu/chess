@@ -11,6 +11,7 @@ import exception.ResponseException;
 import model.AuthData;
 import model.GameData;
 import chess.ChessGame.TeamColor;
+import websocket.messages.NotificationMessage;
 import websocket.messages.ServerMessage;
 
 import java.io.PrintStream;
@@ -234,7 +235,7 @@ public final class GameUI extends ClientUI implements MessageHandler {
                 case "b" -> BLACK_BISHOP;
                 case "q" -> BLACK_QUEEN;
                 case "k" -> BLACK_KING;
-                default -> "U";
+                default -> "?";
             };
             out.print(pieceIcon);
         }
@@ -245,7 +246,9 @@ public final class GameUI extends ClientUI implements MessageHandler {
 
 
     @Override
-    public void notify(ServerMessage serverMessage) {
+    public void notify(NotificationMessage notificationMessage) {
+        System.out.println(SET_TEXT_ITALIC + SET_TEXT_COLOR_DARK_GREY + notificationMessage.getMessage() + RESET_TEXT_ITALIC);
+        printPrompt();
     }
 
 }

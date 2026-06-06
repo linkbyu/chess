@@ -3,7 +3,7 @@ package client.websocket;
 import com.google.gson.Gson;
 import exception.ResponseException;
 import jakarta.websocket.*;
-import websocket.messages.ServerMessage;
+import websocket.messages.NotificationMessage;
 
 import java.net.URI;
 
@@ -25,8 +25,8 @@ public class WebSocketFacade extends Endpoint {
             session.addMessageHandler(new jakarta.websocket.MessageHandler.Whole<String>() {
                 @Override
                 public void onMessage(String message) {
-                    ServerMessage serverMessage = new Gson().fromJson(message, ServerMessage.class);
-                    messageHandler.notify(serverMessage);
+                    var notification = new Gson().fromJson(message, NotificationMessage.class);
+                    messageHandler.notify(notification);
                 }
             });
 
