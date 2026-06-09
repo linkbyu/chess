@@ -31,7 +31,7 @@ public class Server {
         }
         initializeServices(userDAO, gameDAO, authDAO);
 
-        webSocketHandler = new WebSocketHandler();
+        webSocketHandler = new WebSocketHandler(userService, gameService);
 
         javalin = Javalin.create(config -> config.staticFiles.add("web"))
                 .delete("/db", ctx -> clearService.clear() )

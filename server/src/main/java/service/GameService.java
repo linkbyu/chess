@@ -79,4 +79,8 @@ public class GameService {
         }
     }
 
+    public void updateGame(int gameID, GameData newGame) throws DataAccessException {
+        gameDAO.updateGame(gameID, newGame);
+    }
+
 }

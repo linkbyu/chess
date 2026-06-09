@@ -1,6 +1,8 @@
 package server.websocket;
 
+import com.google.gson.Gson;
 import org.eclipse.jetty.websocket.api.Session;
+import websocket.messages.LoadGameMessage;
 import websocket.messages.NotificationMessage;
 
 import java.io.IOException;
@@ -25,6 +27,13 @@ public class ConnectionManager {
             if (session.isOpen() && !session.equals(excludedSession)) {
                 session.getRemote().sendString(msg);
             }
+        }
+    }
+
+    public void loadGameForAllClients(LoadGameMessage loadGameMessage) throws IOException {
+        String jsonString = new Gson().toJson(loadGameMessage);
+        for (Session session : connections) {
+            session.getRemote().sendString(jsonString);
         }
     }
 
