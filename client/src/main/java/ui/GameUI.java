@@ -12,6 +12,8 @@ import websocket.messages.NotificationMessage;
 
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Collection;
+import java.util.function.Predicate;
 
 import static ui.EscapeSequences.*;
 
@@ -51,7 +53,7 @@ public final class GameUI extends ClientUI implements MessageHandler {
             case "redraw", "r" -> printBoardSetup();
             case "leave" -> leave();
             case "move", "m" -> makeMove(params);
-            case "highlight", "hl" -> highlightLegalMoves();
+            case "highlight", "hl" -> highlightLegalMoves(params);
             case "resign" -> resign();
             case "help", "h" -> help();
             default -> throw new ResponseException(ResponseException.Code.BadRequest,
@@ -59,31 +61,40 @@ public final class GameUI extends ClientUI implements MessageHandler {
         };
     }
 
-    private String printBoardSetup() {
-        String username = authData.username();
-        String blackUsername = gameData.blackUsername();
+    private String printBoardSetup() throws ResponseException {
+        var out = new PrintStream(System.out, true, StandardCharsets.UTF_8);
+        out.print(ERASE_SCREEN);
+        var teamColor = determineTeamToPrint();
+        drawLetterLabels(out, teamColor);
 
-        TeamColor team;
-        if ( username.equals(blackUsername) ) {
-            team = TeamColor.BLACK;
+        DrawBoardInfo info;
+        switch(teamColor) { // set conditions based on team
+            case WHITE -> {
+                info = new DrawBoardInfo(8, row -> row > 0, -1,
+                                              1, col -> col < BOARD_LENGTH_LIMIT_IN_SQUARES, 1);
+            }
+            case BLACK -> {
+                info = new DrawBoardInfo(1, row -> row < BOARD_LENGTH_LIMIT_IN_SQUARES, 1,
+                                              8, col -> col > 0, -1);
+            }
+            case null -> throw new ResponseException(ResponseException.Code.BadRequest, "No team given.");
         }
-        else {
-            team = TeamColor.WHITE;
-        }
+        drawChessBoard(out, info);
 
-        printBoard(team);
+        drawLetterLabels(out, teamColor);
         return "";
     }
 
-    private void printBoard(TeamColor teamColor) {
+    private TeamColor determineTeamToPrint() {
+        String username = authData.username();
+        String blackUsername = gameData.blackUsername();
 
-        var out = new PrintStream(System.out, true, StandardCharsets.UTF_8);
-
-        out.print(ERASE_SCREEN);
-
-        drawLetterLabels(out, teamColor);
-        drawChessBoard(out, teamColor);
-        drawLetterLabels(out, teamColor);
+        if ( username.equals(blackUsername) ) {
+            return TeamColor.BLACK;
+        }
+        else {
+            return TeamColor.WHITE;
+        }
 
     }
 
@@ -129,48 +140,34 @@ public final class GameUI extends ClientUI implements MessageHandler {
 
     private boolean evenRow;
 
-    private void drawChessBoard(PrintStream out, TeamColor teamColor) {
+    private void drawChessBoard(PrintStream out, DrawBoardInfo info) throws ResponseException {
         setBorderColor(out);
-        switch(teamColor) {
-            case WHITE -> drawChessBoardWhite(out);
-            case BLACK -> drawChessBoardBlack(out);
-        }
-    }
 
-    private void drawChessBoardWhite(PrintStream out) {
-        for (int rowNum = 8; rowNum > 0; --rowNum) {
-            //int rowNum = rowLabels.get(boardRow - 1);
+        // get params from DrawBoardInfo object
+        int rowNum = info.rowNum();
+        Predicate<Integer> rowCondition = info.rowCondition();
+        int rowIter = info.rowIter();
+
+
+        while (rowCondition.test(rowNum)) {
             evenRow = (rowNum % 2) != 0;
-
             printRowLabelSquare(out, rowNum);
 
-            for (int colNum = 1; colNum < 9; ++colNum) {
+            int colNum = info.colNum();
+            Predicate<Integer> colCondition = info.colCondition();
+            int colIter = info.colIter();
+            while (colCondition.test(colNum)) {
                 setBoardSquareColor(out, evenRow, colNum);
                 printBoardSquare(out, new ChessPosition(rowNum, colNum));
-            }
 
+                colNum += colIter;
+            }
 
             printRowLabelSquare(out, rowNum);
             resetPrintColor(out);
             out.println();
-        }
-    }
 
-    private void drawChessBoardBlack(PrintStream out) {
-        for (int rowNum = 1; rowNum < BOARD_LENGTH_LIMIT_IN_SQUARES; ++rowNum) {
-            evenRow = (rowNum % 2) != 0;
-
-            printRowLabelSquare(out, rowNum);
-
-            for (int colNum = 8; colNum > 0; --colNum) {
-                setBoardSquareColor(out, evenRow, colNum);
-                printBoardSquare(out, new ChessPosition(rowNum, colNum));
-            }
-
-
-            printRowLabelSquare(out, rowNum);
-            resetPrintColor(out);
-            out.println();
+            rowNum += rowIter;
         }
     }
 
@@ -216,7 +213,7 @@ public final class GameUI extends ClientUI implements MessageHandler {
         ChessBoard board = game.getBoard();
         ChessPiece piece = board.getPiece(position);
         if (piece != null) {
-            String pieceString = piece.toString();
+            /*String pieceString = piece.toString();
             String pieceIcon =  switch (pieceString) {
                 case "P" -> WHITE_PAWN;
                 case "R" -> WHITE_ROOK;
@@ -232,8 +229,8 @@ public final class GameUI extends ClientUI implements MessageHandler {
                 case "q" -> BLACK_QUEEN;
                 case "k" -> BLACK_KING;
                 default -> "?";
-            };
-            out.print(pieceIcon);
+            };*/
+            out.print(piece);
         }
         else {
             out.print(EMPTY);
@@ -319,9 +316,17 @@ public final class GameUI extends ClientUI implements MessageHandler {
         };
     }
 
-    private String highlightLegalMoves() {
+    private String highlightLegalMoves(String[] params) throws ResponseException {
+        if (params.length == 1) {
+            ChessPosition position = createChessPosition(params[0]);
+            ChessPiece requestedPiece = game.getBoard().getPiece(position);
+            Collection<ChessMove> possibleMoves = game.validMoves(position);
 
-        return "";
+
+            return "Highlighted legal moves for " + requestedPiece;
+        }
+        throw new ResponseException(ResponseException.Code.BadRequest,
+                "Expected: \"hl\" <PiecePosition>");
     }
 
     private String resign() throws ResponseException {

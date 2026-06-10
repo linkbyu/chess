@@ -104,7 +104,7 @@ public final class PostloginUI extends ClientUI{
                 case WHITE -> "White";
                 case BLACK -> "Black";
             };
-            return String.format("Joined game \"%s\" on the %s Team.", gameName, joinedTeam);
+            return String.format("Joined game \"%s\" on the %s Team.\n", gameName, joinedTeam);
         }
         throw new ResponseException(ResponseException.Code.BadRequest, "Expected: \"join\" <GAME #> [WHITE|BLACK]");
     }

@@ -20,14 +20,14 @@ public class Repl {
 
 
     private AuthData userAuth;
+    static final String RESPONSE_SPACING = "  ";
 
     public void run() {
         System.out.print( client.help() );
         Scanner scanner = new Scanner(System.in);
 
-        var result = "";
-        while ( true ) {
-            System.out.print(result);
+        String result = "";
+        do {
             client.printPrompt();
             String line = scanner.nextLine();
 
@@ -36,34 +36,32 @@ public class Repl {
                 if (result.equals("quit")) {
                     break;
                 }
+                System.out.print(result);
+
+                if (client.isUiShift()) {
+                    switchUI(command, params);
+                    client.setUiShift(false);
+                }
             } catch (Exception ex) {
-                result = RESPONSE_SPACING + SET_TEXT_COLOR_RED + ex.getMessage();
+                System.out.print(RESPONSE_SPACING + SET_TEXT_COLOR_RED + ex.getMessage());
 
             }
-        }
+        } while ( true );
         System.out.println(SET_TEXT_COLOR_BLUE +  "Thanks for playing!");
     }
 
 
 
-    static final String RESPONSE_SPACING = "  ";
+    private String command;
+    private String[] params;
 
     private String eval(String input) throws ResponseException {
         String[] tokens = input.toLowerCase().split(" ");
-        String command = (tokens.length > 0) ? tokens[0] : "";
-        String[] params = Arrays.copyOfRange(tokens, 1, tokens.length);
+        command = (tokens.length > 0) ? tokens[0] : "";
+        params = Arrays.copyOfRange(tokens, 1, tokens.length);
 
         String result = client.commandMenu(command, params);
-        if (client.isUiShift()) {
-            switchUI(command, params);
-            client.setUiShift(false);
-            if ( command.equals("join") || command.equals("observe") ) {
-                result += "\n" + client.commandMenu("draw", null) + client.help();
-            }
-            else {
-                result += "\n" + client.help();
-            }
-        }
+
         return result;
     }
 
@@ -87,6 +85,14 @@ public class Repl {
             case "leave":
                 client = new PostloginUI(serverFacade, userAuth);
                 break;
+        }
+
+
+        if ( command.equals("join") || command.equals("observe") ) {
+            System.out.print("\n" + client.commandMenu("redraw", null) + client.help());
+        }
+        else {
+            System.out.print("\n" + client.help());
         }
     }
 
