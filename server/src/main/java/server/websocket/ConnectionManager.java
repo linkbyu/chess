@@ -21,11 +21,12 @@ public class ConnectionManager {
     }
 
     public void broadcast(NotificationMessage notification, Session excludedSession) throws IOException {
-        String msg = notification.getMessage();
+        String jsonString = new Gson().toJson(notification);
 
         for (Session session : connections) {
             if (session.isOpen() && !session.equals(excludedSession)) {
-                session.getRemote().sendString(msg);
+
+                session.getRemote().sendString(jsonString);
             }
         }
     }

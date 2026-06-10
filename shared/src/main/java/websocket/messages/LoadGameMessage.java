@@ -1,19 +1,25 @@
 package websocket.messages;
 
+import chess.ChessMove;
 import model.GameData;
 
 public class LoadGameMessage extends ServerMessage{
 
-    private final GameData gameData;
+    private final GameData game;
+    private final ChessMove previousMove;
 
-    public LoadGameMessage(ServerMessageType type, GameData gameData) {
+    public LoadGameMessage(ServerMessageType type, GameData gameData, ChessMove previousMove) {
         super(type);
-        this.gameData = gameData;
+        this.game = gameData;
+        this.previousMove = previousMove;
     }
 
 
     public GameData getGameData() {
-        return gameData;
+        return game;
     }
 
+    public ChessMove getPreviousMove() {
+        return previousMove;
+    }
 }

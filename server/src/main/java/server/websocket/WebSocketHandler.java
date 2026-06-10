@@ -2,6 +2,7 @@ package server.websocket;
 
 import chess.*;
 import com.google.gson.Gson;
+import dataaccess.exception.BadRequestException;
 import dataaccess.exception.DataAccessException;
 import dataaccess.exception.UnauthorizedException;
 import io.javalin.websocket.*;
@@ -44,19 +45,25 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
         var authData = userService.verifyAuth( userCommand.getAuthToken() );
         String username = authData.username();
 
-        var gameData = gameService.findGame(userCommand.getGameID());
-
         try {
-            switch (userCommand.getCommandType()) {
+            var gameData = gameService.findGame(userCommand.getGameID());
+            var commandType = userCommand.getCommandType();
+
+            switch (commandType) {
                 case CONNECT -> connect(ctx.session, gameData, username);
-                case MAKE_MOVE -> makeMove(ctx.session, gameData, username, ((MakeMoveCommand) userCommand).getMove());
+                case MAKE_MOVE -> {
+                    var makeMoveCommand = new Gson().fromJson(ctx.message(), MakeMoveCommand.class);
+                    makeMove(ctx.session, gameData, username, makeMoveCommand.getMove());
+                }
                 case RESIGN -> resign(ctx.session, gameData, username);
                 case LEAVE -> leave(ctx.session, gameData, username);
             }
-        } catch (IOException e) {
+        } catch (IOException ex) {
             var error = new ErrorMessage(ServerMessage.ServerMessageType.ERROR,
                                         "A Connection Error Has Occurred.");
             sendServerMessage(ctx.session, error);
+        } catch (DataAccessException ex) {
+            sendServerMessage(ctx.session, new ErrorMessage(ServerMessage.ServerMessageType.ERROR, ex.getMessage()));
         }
     }
 
@@ -65,16 +72,15 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
         System.out.println("Websocket closed");
     }
 
-    private void connect(Session rootSession, GameData gameData, String username) throws IOException {
+    private void connect(Session rootSession, GameData gameData, String username) throws IOException, DataAccessException {
         connections.add(rootSession);
 
         String msg = String.format("%s has joined the ", username);
-        if ( username.equals(gameData.whiteUsername()) ) {
+        if (username.equals(gameData.whiteUsername())) {
             msg += "White Team.";
-        } else if ( username.equals( gameData.blackUsername()) ) {
+        } else if (username.equals(gameData.blackUsername())) {
             msg += "Black Team.";
-        }
-        else { // observer
+        } else { // observer
             msg = String.format("%s is observing the game.", username);
         }
 
@@ -83,7 +89,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
         connections.broadcast(notification, rootSession);
 
         // LoadGame Message to Root User
-        sendServerMessage(rootSession, new LoadGameMessage(ServerMessage.ServerMessageType.LOAD_GAME, gameData));
+        sendServerMessage(rootSession, new LoadGameMessage(ServerMessage.ServerMessageType.LOAD_GAME, gameData, null));
     }
 
     private void sendServerMessage(Session rootSession, ServerMessage serverMessage) throws IOException {
@@ -103,7 +109,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
             if (requestedPiece == null) { // piece does not exist
                 throw new InvalidMoveException("No piece found at the starting position.");
             }
-            if ( userTeamColor == game.getTeamTurn() ) { // tried to move when it's not the player's turn
+            if ( userTeamColor != game.getTeamTurn() ) { // tried to move when it's not the player's turn
                 throw new InvalidMoveException("It is not your turn!");
             }
 
@@ -124,7 +130,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
             GameData updatedGameData = updateGameToDatabase(gameData.gameID(), gameData, game);
 
             // load the updated game for everyone
-            connections.loadGameForAllClients(new LoadGameMessage(ServerMessage.ServerMessageType.LOAD_GAME, updatedGameData));
+            connections.loadGameForAllClients(new LoadGameMessage(ServerMessage.ServerMessageType.LOAD_GAME, updatedGameData, requestedMove));
 
             // notify all other clients what move was made and by whom
             String msg = String.format("%s made the move %s %s", username, requestedPiece, requestedMove);

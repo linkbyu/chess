@@ -8,6 +8,8 @@ import exception.ResponseException;
 import model.AuthData;
 import model.GameData;
 import chess.ChessGame.TeamColor;
+import websocket.messages.ErrorMessage;
+import websocket.messages.LoadGameMessage;
 import websocket.messages.NotificationMessage;
 
 import java.io.PrintStream;
@@ -16,11 +18,13 @@ import java.util.Collection;
 import java.util.function.Predicate;
 
 import static ui.EscapeSequences.*;
+import static ui.Repl.RESPONSE_SPACING;
 
 public final class GameUI extends ClientUI implements MessageHandler {
 
-    private final GameData gameData;
-    private final ChessGame game;
+    private GameData gameData;
+    private ChessGame game;
+    private ChessMove previousMove;
     private final WebSocketFacade ws;
 
     public GameUI(ServerFacade server, AuthData authData, GameData gameData) throws ResponseException {
@@ -29,6 +33,7 @@ public final class GameUI extends ClientUI implements MessageHandler {
 
         this.gameData = gameData;
         game = gameData.game();
+        previousMove = null;
         replIcon = String.format("[Game \"%s\"]", gameData.gameName());
     }
 
@@ -42,7 +47,7 @@ public final class GameUI extends ClientUI implements MessageHandler {
         builder.append(helpTextColor("\"highlight\" or \"hl\" <PiecePosition>",
                                     "to highlight the legal moves for a given piece"));
         builder.append(helpTextColor("resign", "to forfeit the game"));
-        builder.append(helpTextColor("leave", "to exit game"));
+        builder.append(helpTextColor("\"leave\" or \"l\"", "to exit game"));
         builder.append(helpTextColor("\"help\" or \"h\"", "show possible commands again"));
         return builder.toString();
     }
@@ -51,7 +56,7 @@ public final class GameUI extends ClientUI implements MessageHandler {
     String commandMenu(String command, String[] params) throws ResponseException {
         return switch(command) {
             case "redraw", "r" -> printBoardSetup();
-            case "leave" -> leave();
+            case "leave", "l" -> leave();
             case "move", "m" -> makeMove(params);
             case "highlight", "hl" -> highlightLegalMoves(params);
             case "resign" -> resign();
@@ -69,14 +74,14 @@ public final class GameUI extends ClientUI implements MessageHandler {
 
         DrawBoardInfo info;
         switch(teamColor) { // set conditions based on team
-            case WHITE -> {
+            case WHITE ->
                 info = new DrawBoardInfo(8, row -> row > 0, -1,
                                               1, col -> col < BOARD_LENGTH_LIMIT_IN_SQUARES, 1);
-            }
-            case BLACK -> {
+
+            case BLACK ->
                 info = new DrawBoardInfo(1, row -> row < BOARD_LENGTH_LIMIT_IN_SQUARES, 1,
                                               8, col -> col > 0, -1);
-            }
+
             case null -> throw new ResponseException(ResponseException.Code.BadRequest, "No team given.");
         }
         drawChessBoard(out, info);
@@ -138,16 +143,15 @@ public final class GameUI extends ClientUI implements MessageHandler {
         out.print(LETTER_SPACER);
     }
 
-    private boolean evenRow;
 
-    private void drawChessBoard(PrintStream out, DrawBoardInfo info) throws ResponseException {
+    private void drawChessBoard(PrintStream out, DrawBoardInfo info) {
         setBorderColor(out);
 
         // get params from DrawBoardInfo object
         int rowNum = info.rowNum();
         Predicate<Integer> rowCondition = info.rowCondition();
         int rowIter = info.rowIter();
-
+        boolean evenRow;
 
         while (rowCondition.test(rowNum)) {
             evenRow = (rowNum % 2) != 0;
@@ -157,8 +161,16 @@ public final class GameUI extends ClientUI implements MessageHandler {
             Predicate<Integer> colCondition = info.colCondition();
             int colIter = info.colIter();
             while (colCondition.test(colNum)) {
-                setBoardSquareColor(out, evenRow, colNum);
-                printBoardSquare(out, new ChessPosition(rowNum, colNum));
+                var currentPosition = new ChessPosition(rowNum, colNum);
+                if ( previousMove != null &&
+                        ( currentPosition.equals(previousMove.getStartPosition()) ||
+                        currentPosition.equals(previousMove.getEndPosition()) ) ) {
+                    setPreviousMoveSquareColor(out);
+                }
+                else {
+                    setBoardSquareColor(out, evenRow, colNum);
+                }
+                printBoardSquare(out, currentPosition);
 
                 colNum += colIter;
             }
@@ -169,6 +181,11 @@ public final class GameUI extends ClientUI implements MessageHandler {
 
             rowNum += rowIter;
         }
+    }
+
+    private void setPreviousMoveSquareColor(PrintStream out) {
+        out.print(SET_BG_COLOR_MAGENTA);
+        out.print(SET_TEXT_COLOR_BLUE);
     }
 
     private void setBoardSquareColor(PrintStream out, boolean evenRow, int boardCol) {
@@ -194,16 +211,16 @@ public final class GameUI extends ClientUI implements MessageHandler {
 
     private void setDarkSquareColor(PrintStream out) {
         out.print(SET_BG_COLOR_LIGHT_GREY);
-        out.print(SET_TEXT_COLOR_BLACK);
+        out.print(SET_TEXT_COLOR_BLUE);
     }
 
     private void setLightSquareColor(PrintStream out) {
         out.print(SET_BG_COLOR_WHITE);
-        out.print(SET_TEXT_COLOR_BLACK);
+        out.print(SET_TEXT_COLOR_BLUE);
     }
 
     private void printRowLabelSquare(PrintStream out, int rowNum) {
-        setBorderColor(out);;
+        setBorderColor(out);
         out.print(LETTER_SPACER + rowNum + LETTER_SPACER);
 
     }
@@ -213,23 +230,6 @@ public final class GameUI extends ClientUI implements MessageHandler {
         ChessBoard board = game.getBoard();
         ChessPiece piece = board.getPiece(position);
         if (piece != null) {
-            /*String pieceString = piece.toString();
-            String pieceIcon =  switch (pieceString) {
-                case "P" -> WHITE_PAWN;
-                case "R" -> WHITE_ROOK;
-                case "N" -> WHITE_KNIGHT;
-                case "B" -> WHITE_BISHOP;
-                case "Q" -> WHITE_QUEEN;
-                case "K" -> WHITE_KING;
-
-                case "p" -> BLACK_PAWN;
-                case "r" -> BLACK_ROOK;
-                case "n" -> BLACK_KNIGHT;
-                case "b" -> BLACK_BISHOP;
-                case "q" -> BLACK_QUEEN;
-                case "k" -> BLACK_KING;
-                default -> "?";
-            };*/
             out.print(piece);
         }
         else {
@@ -244,6 +244,27 @@ public final class GameUI extends ClientUI implements MessageHandler {
         printPrompt();
     }
 
+    @Override
+    public void loadGame(LoadGameMessage loadGameMessage) {
+        gameData = loadGameMessage.getGameData();
+        game = gameData.game();
+        previousMove = loadGameMessage.getPreviousMove();
+
+        try {
+            printBoardSetup();
+        } catch (ResponseException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public void showError(ErrorMessage errorMessage) {
+        String msg = errorMessage.getErrorMessage();
+        System.out.println("\n" + RESPONSE_SPACING + SET_TEXT_COLOR_RED + msg +
+                            RESET_TEXT_COLOR);
+        printPrompt();
+    }
+
     private String leave() throws ResponseException {
         setUiShift(true);
         ws.leaveGame( authData.authToken(), gameData.gameID() );
@@ -254,7 +275,7 @@ public final class GameUI extends ClientUI implements MessageHandler {
         ChessMove requestedMove = createChessMove(params);
         ws.makeMove(authData.authToken(), gameData.gameID(), requestedMove);
 
-        ChessPiece selectedPiece = game.getBoard().getPiece(requestedMove.getEndPosition());
+        ChessPiece selectedPiece = game.getBoard().getPiece(requestedMove.getStartPosition());
         return String.format("Moved %s %s", selectedPiece, requestedMove);
     }
 
@@ -323,7 +344,7 @@ public final class GameUI extends ClientUI implements MessageHandler {
             Collection<ChessMove> possibleMoves = game.validMoves(position);
 
 
-            return "Highlighted legal moves for " + requestedPiece;
+            return String.format("Highlighted legal moves for %s", requestedPiece);
         }
         throw new ResponseException(ResponseException.Code.BadRequest,
                 "Expected: \"hl\" <PiecePosition>");

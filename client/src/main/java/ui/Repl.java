@@ -89,7 +89,9 @@ public class Repl {
 
 
         if ( command.equals("join") || command.equals("observe") ) {
-            System.out.print("\n" + client.commandMenu("redraw", null) + client.help());
+            System.out.println();
+            client.commandMenu("redraw", null);
+            System.out.print("\n" + client.help());
         }
         else {
             System.out.print("\n" + client.help());
