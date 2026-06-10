@@ -12,6 +12,7 @@ import service.GameService;
 import service.UserService;
 import websocket.commands.MakeMoveCommand;
 import websocket.commands.UserGameCommand;
+import websocket.messages.ErrorMessage;
 import websocket.messages.LoadGameMessage;
 import websocket.messages.NotificationMessage;
 import websocket.messages.ServerMessage;
@@ -45,11 +46,17 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
 
         var gameData = gameService.findGame(userCommand.getGameID());
 
-        switch (userCommand.getCommandType()) {
-            case CONNECT -> connect( ctx.session, gameData, username );
-            case MAKE_MOVE -> makeMove(ctx.session, gameData, username, ((MakeMoveCommand) userCommand).getMove());
-            case RESIGN -> resign(gameData, username);
-            case LEAVE -> leave(ctx.session, gameData, username);
+        try {
+            switch (userCommand.getCommandType()) {
+                case CONNECT -> connect(ctx.session, gameData, username);
+                case MAKE_MOVE -> makeMove(ctx.session, gameData, username, ((MakeMoveCommand) userCommand).getMove());
+                case RESIGN -> resign(ctx.session, gameData, username);
+                case LEAVE -> leave(ctx.session, gameData, username);
+            }
+        } catch (IOException e) {
+            var error = new ErrorMessage(ServerMessage.ServerMessageType.ERROR,
+                                        "A Connection Error Has Occurred.");
+            sendServerMessage(ctx.session, error);
         }
     }
 
@@ -75,31 +82,52 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
         var notification = new NotificationMessage(ServerMessage.ServerMessageType.NOTIFICATION, msg);
         connections.broadcast(notification, rootSession);
 
-        loadGameToRootUser(rootSession, new LoadGameMessage(ServerMessage.ServerMessageType.LOAD_GAME, gameData));
+        // LoadGame Message to Root User
+        sendServerMessage(rootSession, new LoadGameMessage(ServerMessage.ServerMessageType.LOAD_GAME, gameData));
     }
 
-    private void loadGameToRootUser(Session rootSession, LoadGameMessage loadGameMessage) throws IOException {
-        String jsonString = new Gson().toJson(loadGameMessage);
+    private void sendServerMessage(Session rootSession, ServerMessage serverMessage) throws IOException {
+        String jsonString = new Gson().toJson(serverMessage);
         rootSession.getRemote().sendString(jsonString);
     }
 
-    private void makeMove(Session rootSession, GameData gameData, String username, ChessMove requestedMove) {
+    private void makeMove(Session rootSession, GameData gameData, String username, ChessMove requestedMove) throws IOException, DataAccessException {
         ChessGame game = gameData.game();
         try {
             // attempt requested move
-            game.makeMove(requestedMove);
+            var userTeamColor = findWhichTeamUserIsOn(gameData, username);
+            if ( userTeamColor == null ) { // person is an observer
+                throw new InvalidMoveException("Observers cannot participate in the game!");
+            }
+            ChessPiece requestedPiece = game.getBoard().getPiece(requestedMove.getStartPosition());
+            if (requestedPiece == null) { // piece does not exist
+                throw new InvalidMoveException("No piece found at the starting position.");
+            }
+            if ( userTeamColor == game.getTeamTurn() ) { // tried to move when it's not the player's turn
+                throw new InvalidMoveException("It is not your turn!");
+            }
+
+
+
+            if ( userTeamColor == requestedPiece.getTeamColor() ) { // check if they're moving their own team's pieces
+                try {
+                    game.makeMove(requestedMove);
+                } catch (InvalidMoveException e) {
+                    throw new InvalidMoveException(String.format("Invalid move with requested piece %s", requestedPiece.getPieceType()) );
+                }
+            }
+            else {
+                throw new InvalidMoveException("You cannot move the opposing team's pieces!");
+            }
 
             // update database
-            int gameID = gameData.gameID();
-            var updatedGameData = new GameData(gameID, gameData.whiteUsername(), gameData.blackUsername(),
-                    gameData.gameName(), game);
-            gameService.updateGame(gameID, updatedGameData);
+            GameData updatedGameData = updateGameToDatabase(gameData.gameID(), gameData, game);
 
             // load the updated game for everyone
             connections.loadGameForAllClients(new LoadGameMessage(ServerMessage.ServerMessageType.LOAD_GAME, updatedGameData));
 
             // notify all other clients what move was made and by whom
-            String msg = createMoveMessage(username, game, requestedMove);
+            String msg = createMoveMessage(username, game, requestedMove, requestedPiece);
             var notification = new NotificationMessage(ServerMessage.ServerMessageType.NOTIFICATION, msg);
             connections.broadcast(notification, rootSession);
 
@@ -109,16 +137,21 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
 
 
         } catch (InvalidMoveException ex) {
-            throw new RuntimeException(ex);
-        } catch (DataAccessException ex) {
-            throw new RuntimeException(ex);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+            var invalidMoveError = new ErrorMessage(ServerMessage.ServerMessageType.ERROR, ex.getMessage());
+            sendServerMessage(rootSession, invalidMoveError);
         }
     }
 
-    private String createMoveMessage(String username, ChessGame game, ChessMove move) {
-        ChessPiece movedPiece = game.getBoard().getPiece(move.getEndPosition());
+
+    private GameData updateGameToDatabase(int gameID, GameData gameData, ChessGame updatedGame) throws DataAccessException {
+        var updatedGameData = new GameData(gameID, gameData.whiteUsername(), gameData.blackUsername(),
+                gameData.gameName(), updatedGame);
+        gameService.updateGame(gameID, updatedGameData);
+
+        return updatedGameData;
+    }
+
+    private String createMoveMessage(String username, ChessGame game, ChessMove move, ChessPiece movedPiece) {
         String msg = String.format("%s made the move %s", username, movedPiece.toString() );
 
         String startingPos = readablePositionOnBoard( move.getStartPosition() );
@@ -169,14 +202,32 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
         return msg;
     }
 
-    private void resign(GameData gameData, String username) throws IOException, InvalidMoveException {
-        // mark game as over
-        var teamColor = findWhichTeamUserIsOn(gameData, username);
-        if (teamColor == null) {
-            throw new InvalidMoveException("You cannot resign as an observer!");
-        }
+    private void resign(Session rootSession, GameData gameData, String username) throws IOException, DataAccessException {
+        try {
+            var teamColor = findWhichTeamUserIsOn(gameData, username);
+            if (teamColor == null) { // the user is an observer
+                throw new InvalidMoveException("Observers cannot participate in the game!");
+            }
 
-        // notify all clients that the root player has resigned
+            ChessGame game = gameData.game();
+            if (game.isGameOver()) { // check if game is already over
+                throw new InvalidMoveException("Game is already over.");
+            }
+
+            // the user is a player and game hasn't ended yet, so mark game as over
+            game.setGameOver(true);
+            updateGameToDatabase(gameData.gameID(), gameData, game);
+
+            // notify all clients that the root player has resigned
+            var notification = getResignMessage(gameData, username, teamColor);
+            connections.broadcast(notification, null);
+
+        } catch (InvalidMoveException ex) {
+            sendServerMessage(rootSession, new ErrorMessage(ServerMessage.ServerMessageType.ERROR, ex.getMessage()));
+        }
+    }
+
+    private static NotificationMessage getResignMessage(GameData gameData, String username, ChessGame.TeamColor teamColor) {
         String opposingTeamUsername = "";
         if (teamColor == ChessGame.TeamColor.WHITE) {
             opposingTeamUsername = gameData.blackUsername();
@@ -184,8 +235,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
             opposingTeamUsername = gameData.whiteUsername();
         }
         String msg = String.format("%s has forfeit. %s wins!", username, opposingTeamUsername);
-        var notification = new NotificationMessage(ServerMessage.ServerMessageType.NOTIFICATION, msg);
-        connections.broadcast(notification, null);
+        return new NotificationMessage(ServerMessage.ServerMessageType.NOTIFICATION, msg);
     }
 
     private void leave(Session rootSession, GameData gameData, String username) throws DataAccessException, IOException {

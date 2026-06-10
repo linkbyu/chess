@@ -1,9 +1,6 @@
 package ui;
 
-import chess.ChessBoard;
-import chess.ChessGame;
-import chess.ChessPiece;
-import chess.ChessPosition;
+import chess.*;
 import client.websocket.MessageHandler;
 import client.ServerFacade;
 import client.websocket.WebSocketFacade;
@@ -12,7 +9,6 @@ import model.AuthData;
 import model.GameData;
 import chess.ChessGame.TeamColor;
 import websocket.messages.NotificationMessage;
-import websocket.messages.ServerMessage;
 
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
@@ -53,10 +49,10 @@ public final class GameUI extends ClientUI implements MessageHandler {
     String commandMenu(String command, String[] params) throws ResponseException {
         return switch(command) {
             case "redraw", "r" -> printBoardSetup();
-            case "leave" -> {
-                setUiShift(true);
-                yield String.format("Leaving \"%s\"", gameData.gameName());
-            }
+            case "leave" -> leave();
+            case "move", "m" -> makeMove(params);
+            case "highlight", "hl" -> highlightLegalMoves();
+            case "resign" -> resign();
             case "help", "h" -> help();
             default -> throw new ResponseException(ResponseException.Code.BadRequest,
                         "Unknown command. Please try again.\n" + help());
@@ -249,6 +245,83 @@ public final class GameUI extends ClientUI implements MessageHandler {
     public void notify(NotificationMessage notificationMessage) {
         System.out.println(SET_TEXT_ITALIC + SET_TEXT_COLOR_DARK_GREY + notificationMessage.getMessage() + RESET_TEXT_ITALIC);
         printPrompt();
+    }
+
+    private String leave() throws ResponseException {
+        setUiShift(true);
+        ws.leaveGame( authData.authToken(), gameData.gameID() );
+        return String.format("Leaving \"%s\".", gameData.gameName());
+    }
+
+    private String makeMove(String[] params) throws ResponseException {
+        ChessMove requestedMove = createChessMove(params);
+        ws.makeMove(authData.authToken(), gameData.gameID(), requestedMove);
+
+        return String.format("");
+    }
+
+    private ChessMove createChessMove(String[] params) throws ResponseException {
+        if (params.length == 2) {
+            ChessPosition startPos = createChessPosition(params[0]);
+            ChessPosition endPos = createChessPosition(params[1]);
+            return new ChessMove(startPos, endPos, null);
+        }
+        else if (params.length == 3) {
+            ChessPosition startPos = createChessPosition(params[0]);
+            ChessPosition endPos = createChessPosition(params[1]);
+            ChessPiece.PieceType requestedPieceType = translateInputToPieceType(params[2]);
+            return new ChessMove(startPos, endPos, requestedPieceType);
+        }
+        throw new ResponseException(ResponseException.Code.BadRequest,
+                "Expected: \"move\" <source> <destination> <promotion piece if applicable>");
+    }
+
+    private ChessPosition createChessPosition(String input) throws ResponseException {
+        try {
+            int col = translateLetterToNum(input.substring(0, 1));
+            int row = Integer.parseInt( input.substring(1, 2) );
+            return new ChessPosition(row, col);
+        } catch (Exception e) {
+            throw new ResponseException(ResponseException.Code.BadRequest,
+                                        "Invalid position on the board. Expected [a-h][1-8]. Ex: \"a5\"");
+        }
+    }
+
+    private int translateLetterToNum(String letter) {
+        letter = letter.toLowerCase();
+        return switch(letter) {
+            case "a" -> 1;
+            case "b" -> 2;
+            case "c" -> 3;
+            case "d" -> 4;
+            case "e" -> 5;
+            case "f" -> 6;
+            case "g" -> 7;
+            case "h" -> 8;
+            default -> 1;
+        };
+    }
+
+    private ChessPiece.PieceType translateInputToPieceType(String input) throws ResponseException {
+        input = input.toLowerCase();
+        return switch(input) {
+            case "queen" -> ChessPiece.PieceType.QUEEN;
+            case "bishop" -> ChessPiece.PieceType.BISHOP;
+            case "rook" -> ChessPiece.PieceType.ROOK;
+            case "knight" -> ChessPiece.PieceType.KNIGHT;
+            default -> throw new ResponseException(ResponseException.Code.BadRequest,
+                    "Invalid promotion piece. Expected \"queen\", \"bishop\", \"rook\", or \"knight\"");
+        };
+    }
+
+    private String highlightLegalMoves() {
+
+        return "";
+    }
+
+    private String resign() throws ResponseException {
+        ws.resignGame( authData.authToken(), gameData.gameID() );
+        return "Forfeited game.";
     }
 
 }

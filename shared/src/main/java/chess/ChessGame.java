@@ -15,14 +15,24 @@ public class ChessGame {
     private TeamColor teamTurn;
     private boolean enPassantWhiteTurn;
     private boolean enPassantBlackTurn;
+    private boolean gameOver;
 
     public ChessGame() {
         board = new ChessBoard();
         teamTurn = TeamColor.WHITE;
         enPassantWhiteTurn = false;
         enPassantBlackTurn = false;
+        gameOver = false;
 
         board.resetBoard();
+    }
+
+    public boolean isGameOver() {
+        return gameOver;
+    }
+
+    public void setGameOver(boolean gameOver) {
+        this.gameOver = gameOver;
     }
 
     /**
