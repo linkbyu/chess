@@ -108,20 +108,20 @@ public class ChessPiece implements Cloneable{
     public String toString() {
         return switch(pieceColor){
             case WHITE -> switch (type) {
-                case PAWN -> "P";
-                case ROOK -> "R";
-                case KNIGHT -> "N";
-                case BISHOP -> "B";
-                case QUEEN -> "Q";
-                case KING -> "K";
+                case PAWN -> " ♙ ";
+                case ROOK -> " ♖ ";
+                case KNIGHT -> " ♘ ";
+                case BISHOP -> " ♗ ";
+                case QUEEN -> " ♕ ";
+                case KING -> " ♔ ";
             };
             case BLACK -> switch (type){
-                case PAWN -> "p";
-                case ROOK -> "r";
-                case KNIGHT -> "n";
-                case BISHOP -> "b";
-                case QUEEN -> "q";
-                case KING -> "k";
+                case PAWN -> " ♟ ";
+                case ROOK -> " ♜ ";
+                case KNIGHT -> " ♞ ";
+                case BISHOP -> " ♝ ";
+                case QUEEN -> " ♛ ";
+                case KING -> " ♚ ";
             };
         };
     }

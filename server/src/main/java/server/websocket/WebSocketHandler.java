@@ -127,7 +127,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
             connections.loadGameForAllClients(new LoadGameMessage(ServerMessage.ServerMessageType.LOAD_GAME, updatedGameData));
 
             // notify all other clients what move was made and by whom
-            String msg = createMoveMessage(username, game, requestedMove, requestedPiece);
+            String msg = String.format("%s made the move %s %s", username, requestedPiece, requestedMove);
             var notification = new NotificationMessage(ServerMessage.ServerMessageType.NOTIFICATION, msg);
             connections.broadcast(notification, rootSession);
 
@@ -151,32 +151,6 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
         return updatedGameData;
     }
 
-    private String createMoveMessage(String username, ChessGame game, ChessMove move, ChessPiece movedPiece) {
-        String msg = String.format("%s made the move %s", username, movedPiece.toString() );
-
-        String startingPos = readablePositionOnBoard( move.getStartPosition() );
-        String endingPos = readablePositionOnBoard( move.getEndPosition() );
-        msg += String.format(" %s %s", startingPos, endingPos);
-
-        return msg;
-    }
-
-    private String readablePositionOnBoard(ChessPosition position) {
-        String boardPos = switch( position.getColumn() ) {
-            case 1 -> "a";
-            case 2 -> "b";
-            case 3 -> "c";
-            case 4 -> "d";
-            case 5 -> "e";
-            case 6 -> "f";
-            case 7 -> "g";
-            case 8 -> "h";
-            default -> "a";
-        };
-
-        boardPos += position.getRow();
-        return boardPos;
-    }
 
     private void broadcastGameStateChange(ChessGame game, ChessGame.TeamColor teamColor) throws IOException {
         String gameStateMsg = createGameStateMessage(game, teamColor);

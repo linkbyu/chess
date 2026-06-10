@@ -257,7 +257,8 @@ public final class GameUI extends ClientUI implements MessageHandler {
         ChessMove requestedMove = createChessMove(params);
         ws.makeMove(authData.authToken(), gameData.gameID(), requestedMove);
 
-        return String.format("");
+        ChessPiece selectedPiece = game.getBoard().getPiece(requestedMove.getEndPosition());
+        return String.format("Moved %s %s", selectedPiece, requestedMove);
     }
 
     private ChessMove createChessMove(String[] params) throws ResponseException {
@@ -280,14 +281,17 @@ public final class GameUI extends ClientUI implements MessageHandler {
         try {
             int col = translateLetterToNum(input.substring(0, 1));
             int row = Integer.parseInt( input.substring(1, 2) );
+            if (row < 1 || row > 8 ) {
+                throw new NumberFormatException();
+            }
             return new ChessPosition(row, col);
-        } catch (Exception e) {
+        } catch (NumberFormatException | IndexOutOfBoundsException ex) {
             throw new ResponseException(ResponseException.Code.BadRequest,
                                         "Invalid position on the board. Expected [a-h][1-8]. Ex: \"a5\"");
         }
     }
 
-    private int translateLetterToNum(String letter) {
+    private int translateLetterToNum(String letter) throws ResponseException {
         letter = letter.toLowerCase();
         return switch(letter) {
             case "a" -> 1;
@@ -298,7 +302,8 @@ public final class GameUI extends ClientUI implements MessageHandler {
             case "f" -> 6;
             case "g" -> 7;
             case "h" -> 8;
-            default -> 1;
+            default -> throw new ResponseException(ResponseException.Code.BadRequest,
+                    "Invalid column letter. Expected \"a\", \"b\", \"c\", \"d\", \"e\", \"f\", \"g\", or \"h\"");
         };
     }
 
