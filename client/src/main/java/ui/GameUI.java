@@ -41,21 +41,32 @@ public final class GameUI extends ClientUI implements MessageHandler {
     @Override
     public String help() {
         var builder = new StringBuilder();
-        if (game.isGameOver()) {
-                String whiteUsername = gameData.whiteUsername();
-                String blackUsername = gameData.blackUsername();
-                String winningUsername = game.getWinnerUsername();
+        if (game.getGameStatusInfo().isGameOver()) {
+            var gameStatusInfo = game.getGameStatusInfo();
 
-                builder.append(SET_TEXT_COLOR_YELLOW + BLACK_ROOK);
-            if (winningUsername == null) {
-                builder.append(String.format("It's a tie! " +
-                        "(Black Team (%s) is in stalemate against White Team (%s))", blackUsername, whiteUsername));
-            } else if (winningUsername.equals(whiteUsername)) {
-                builder.append(String.format("White Team (%s) won against Black Team (%s)", whiteUsername, blackUsername));
-            } else if (winningUsername.equals(blackUsername)) {
-                builder.append(String.format("Black Team (%s) won against White Team (%s)", blackUsername, whiteUsername));
-            } else {
-                builder.append(SET_TEXT_COLOR_RED + "GAME OVER: game status unclear");
+            String whiteUsername = gameStatusInfo.whiteUsername();
+            String blackUsername = gameStatusInfo.blackUsername();
+
+            builder.append(SET_TEXT_COLOR_YELLOW + BLACK_ROOK);
+            switch (gameStatusInfo.gameStatus()) {
+                case STALEMATE -> {
+                    builder.append("It's a tie! ");
+                    switch (gameStatusInfo.affectedTeam()){
+                        case WHITE -> builder.append(String.format("(White Team (%s) achieved stalemate against Black Team (%s))",
+                                whiteUsername, blackUsername));
+                        case BLACK -> builder.append(String.format("(Black Team (%s) achieved stalemate against White Team (%s))",
+                                blackUsername, whiteUsername));
+                    }
+                }
+                case CHECKMATE -> {
+                    switch (gameStatusInfo.affectedTeam()){
+                        case WHITE -> builder.append(String.format("Black Team (%s) won against White Team (%s)",
+                                blackUsername, whiteUsername));
+                        case BLACK -> builder.append(String.format("White Team (%s) won against Black Team (%s)",
+                                whiteUsername, blackUsername));
+
+                    }
+                }
             }
             builder.append(SET_TEXT_COLOR_YELLOW + WHITE_ROOK + RESET_TEXT_COLOR + "\n");
 
@@ -85,7 +96,7 @@ public final class GameUI extends ClientUI implements MessageHandler {
 
     @Override
     String commandMenu(String command, String[] params) throws ResponseException {
-        if (game.isGameOver()) {
+        if (game.getGameStatusInfo().isGameOver()) {
             return switch (command) {
                 case "redraw", "r" -> printBoardSetup();
                 case "leave", "l" -> leave();
@@ -312,7 +323,7 @@ public final class GameUI extends ClientUI implements MessageHandler {
     }
 
     private void swapReplIcon(ChessGame game) {
-        if (!game.isGameOver()) {
+        if (!game.getGameStatusInfo().isGameOver()) {
             replIcon = SET_BG_COLOR_BLACK + SET_TEXT_COLOR_WHITE;
             replIcon += switch (game.getTeamTurn()) {
                 case WHITE -> String.format("[\"%s\": White's Turn]", gameData.gameName());

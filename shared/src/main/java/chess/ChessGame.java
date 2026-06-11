@@ -15,34 +15,25 @@ public class ChessGame {
     private TeamColor teamTurn;
     private boolean enPassantWhiteTurn;
     private boolean enPassantBlackTurn;
-    private boolean gameOver;
-    private String winnerUsername;
+    private GameStatusInfo gameStatusInfo;
 
     public ChessGame() {
         board = new ChessBoard();
         teamTurn = TeamColor.WHITE;
         enPassantWhiteTurn = false;
         enPassantBlackTurn = false;
-        gameOver = false;
-        winnerUsername = null;
+        gameStatusInfo = new GameStatusInfo(GameStatusInfo.GameStatus.NEW_GAME,
+                                            null, null, null);
 
         board.resetBoard();
     }
 
-    public boolean isGameOver() {
-        return gameOver;
+    public GameStatusInfo getGameStatusInfo() {
+        return gameStatusInfo;
     }
 
-    public void setGameOver(boolean gameOver) {
-        this.gameOver = gameOver;
-    }
-
-    public String getWinnerUsername() {
-        return winnerUsername;
-    }
-
-    public void setWinnerUsername(String winnerUsername) {
-        this.winnerUsername = winnerUsername;
+    public void setGameStatusInfo(GameStatusInfo gameStatusInfo) {
+        this.gameStatusInfo = gameStatusInfo;
     }
 
     /**

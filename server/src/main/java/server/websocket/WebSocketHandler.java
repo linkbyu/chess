@@ -99,7 +99,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
     private void makeMove(Session rootSession, GameData gameData, String username, ChessMove requestedMove) throws IOException, DataAccessException {
         ChessGame game = gameData.game();
         try {
-            if (game.isGameOver()) { // check if game is already over
+            if (game.getGameStatusInfo().isGameOver()) { // check if game is already over
                 throw new InvalidMoveException("Game is already over.");
             }
 
@@ -175,19 +175,19 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
     private String createGameStateMessage(ChessGame game, GameData oldGameData, ChessGame.TeamColor teamColor, String username) {
         String msg = "";
         if ( game.isInCheckmate(teamColor) ) {
-            game.setGameOver(true);
-            String opposingPlayerUsername = findOpposingTeamPlayer(oldGameData.whiteUsername(),
-                                                                   oldGameData.blackUsername(), username);
-            game.setWinnerUsername(opposingPlayerUsername);
+            game.setGameStatusInfo(new GameStatusInfo(GameStatusInfo.GameStatus.CHECKMATE, oldGameData.whiteUsername(),
+                                                      oldGameData.blackUsername(), teamColor));
 
             msg = String.format("%s Team is in Checkmate.", teamColor);
         }
         else if ( game.isInCheck(teamColor) ) {
+            game.setGameStatusInfo(new GameStatusInfo(GameStatusInfo.GameStatus.CHECK, oldGameData.whiteUsername(),
+                    oldGameData.blackUsername(), teamColor));
             msg = String.format("%s Team is in Check.", teamColor);
         }
         else if ( game.isInStalemate(teamColor) ) {
-            game.setGameOver(true);
-            game.setWinnerUsername(null);
+            game.setGameStatusInfo(new GameStatusInfo(GameStatusInfo.GameStatus.STALEMATE, oldGameData.whiteUsername(),
+                    oldGameData.blackUsername(), teamColor));
             msg = String.format("%s Team is in a Stalemate.", teamColor);
         }
 
@@ -197,7 +197,8 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
     private void resign(Session rootSession, GameData gameData, String username) throws IOException, DataAccessException {
         try {
             ChessGame game = gameData.game();
-            if (game.isGameOver()) { // check if game is already over
+            var gameStatusInfo = game.getGameStatusInfo();
+            if (gameStatusInfo.isGameOver()) { // check if game is already over
                 throw new InvalidMoveException("Game is already over.");
             }
             var teamColor = findWhichTeamUserIsOn(gameData, username);
@@ -206,10 +207,8 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
             }
 
             // the user is a player and game hasn't ended yet, so mark game as over
-            game.setGameOver(true);
-            String opposingPlayerUsername =
-                    findOpposingTeamPlayer(gameData.whiteUsername(), gameData.blackUsername(), username);
-            game.setWinnerUsername(opposingPlayerUsername);
+            game.setGameStatusInfo(new GameStatusInfo(GameStatusInfo.GameStatus.CHECKMATE, gameData.whiteUsername(),
+                    gameData.blackUsername(), teamColor));
 
             int gameID = gameData.gameID();
             updateGameToDatabase(gameID, gameData, game);
@@ -276,7 +275,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
         }
     }
 
-    private String findOpposingTeamPlayer(String whiteUsername, String blackUsername, String username) {
+    /*private String findOpposingTeamPlayer(String whiteUsername, String blackUsername, String username) {
         if ( username.equals( whiteUsername ) ) {
             return blackUsername;
         }
@@ -286,5 +285,5 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
         else { // they're an observer
             return null;
         }
-    }
+    }*/
 }

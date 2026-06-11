@@ -1,6 +1,7 @@
 package ui;
 
 import chess.ChessGame;
+import chess.GameStatusInfo;
 import client.ServerFacade;
 import exception.ResponseException;
 import model.AuthData;
@@ -63,30 +64,18 @@ public final class PostloginUI extends ClientUI{
         if (!games.isEmpty()) {
             var builder = new StringBuilder();
 
-            for (GameData game : games) {
-                builder.append(game.gameID());
+            for (GameData gameData : games) {
+                builder.append(gameData.gameID());
                 builder.append(".   Game name: ");
-                builder.append(game.gameName());
+                builder.append(gameData.gameName());
                 builder.append("    White: ");
-                builder.append(game.whiteUsername());
+                builder.append(gameData.whiteUsername());
                 builder.append("     Black: ");
-                builder.append(game.blackUsername());
+                builder.append(gameData.blackUsername());
                 builder.append("     Status: ");
 
-                var chessGame = game.game();
-                if ( !chessGame.isGameOver() ) { // maybe record the winner instead of game over or not
-                    builder.append(SET_TEXT_COLOR_YELLOW + "Ongoing ");
-                    switch(chessGame.getTeamTurn()) {
-                        case WHITE ->
-                            builder.append("(white's turn)");
-                        case BLACK ->
-                            builder.append("(black's turn)");
-                    }
-                    builder.append(RESET_TEXT_COLOR);
-                }
-                else { // game is over
-                    builder.append(SET_TEXT_COLOR_RED + "GAME OVER" + RESET_TEXT_COLOR);
-                }
+                appendGameStatus(builder, gameData.game());
+
                 builder.append(" \n");
             }
 
@@ -95,6 +84,49 @@ public final class PostloginUI extends ClientUI{
         else {
             return SET_TEXT_COLOR_YELLOW + "No active games available!" + RESET_TEXT_COLOR;
         }
+    }
+
+    private void appendGameStatus(StringBuilder builder, ChessGame chessGame) {
+        var gameStatusInfo = chessGame.getGameStatusInfo();
+        switch (gameStatusInfo.gameStatus()) {
+            case NEW_GAME:
+                builder.append(SET_TEXT_COLOR_GREEN + "New Game");
+                break;
+            case ONGOING:
+                builder.append(SET_TEXT_COLOR_YELLOW + "Ongoing ");
+                switch(chessGame.getTeamTurn()) {
+                    case WHITE ->
+                            builder.append("(white's turn)");
+                    case BLACK ->
+                            builder.append("(black's turn)");
+                }
+                break;
+            case CHECK:
+                builder.append(SET_TEXT_COLOR_YELLOW + "Check ");
+                switch(gameStatusInfo.affectedTeam()) {
+                    case WHITE ->
+                            builder.append("(white)");
+                    case BLACK ->
+                            builder.append("(black)");
+                }
+                break;
+            case CHECKMATE:
+                builder.append(SET_TEXT_COLOR_WHITE);
+                String losingPlayer = gameStatusInfo.getAffectedPlayer();
+                String winningPlayer = gameStatusInfo.getOtherPlayer();
+                ChessGame.TeamColor winningTeam = gameStatusInfo.getStatusChangerTeam();
+
+                builder.append(String.format("%s (%s) won against %s (%s)", winningPlayer, winningTeam,
+                        losingPlayer, gameStatusInfo.affectedTeam()));
+                break;
+            case STALEMATE:
+                builder.append(SET_TEXT_COLOR_LIGHT_GREY + "Stalemate");
+                break;
+            case null:
+                builder.append("Unknown");
+                break;
+        }
+        builder.append(RESET_TEXT_COLOR);
     }
 
     private String createGame(String[] params) throws ResponseException {
