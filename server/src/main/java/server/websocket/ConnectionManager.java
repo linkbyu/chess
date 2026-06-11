@@ -46,9 +46,9 @@ public class ConnectionManager {
                     session.getRemote().sendString(jsonString);
                 }
             }
-            else {
+            /*else {
                 remove(gameID, session); // removing closed connections
-            }
+            }*/
         }
     }
 
@@ -60,9 +60,9 @@ public class ConnectionManager {
             if (session.isOpen()) {
                 session.getRemote().sendString(jsonString);
             }
-            else {
+            /*else {
                 remove(gameID, session); // removing closed connections
-            }
+            }*/
         }
     }
 

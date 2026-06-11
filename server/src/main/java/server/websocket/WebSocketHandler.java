@@ -93,7 +93,9 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
 
     private void sendServerMessage(Session rootSession, ServerMessage serverMessage) throws IOException {
         String jsonString = new Gson().toJson(serverMessage);
-        rootSession.getRemote().sendString(jsonString);
+        if (rootSession.isOpen()) {
+            rootSession.getRemote().sendString(jsonString);
+        }
     }
 
     private void makeMove(Session rootSession, GameData gameData, String username, ChessMove requestedMove) throws IOException, DataAccessException {
