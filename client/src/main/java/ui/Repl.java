@@ -104,7 +104,7 @@ public class Repl {
         }
 
         try {
-            Thread.sleep(20); // is there a better way?
+            Thread.sleep(50); // is there a better way?
         } catch (InterruptedException ex) {}
         System.out.print("\n" + client.help());
     }

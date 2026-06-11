@@ -71,13 +71,29 @@ public final class PostloginUI extends ClientUI{
                 builder.append(game.whiteUsername());
                 builder.append("     Black: ");
                 builder.append(game.blackUsername());
+                builder.append("     Status: ");
+
+                var chessGame = game.game();
+                if ( !chessGame.isGameOver() ) { // maybe record the winner instead of game over or not
+                    builder.append(SET_TEXT_COLOR_YELLOW + "Ongoing ");
+                    switch(chessGame.getTeamTurn()) {
+                        case WHITE ->
+                            builder.append("(white's turn)");
+                        case BLACK ->
+                            builder.append("(black's turn)");
+                    }
+                    builder.append(RESET_TEXT_COLOR);
+                }
+                else { // game is over
+                    builder.append(SET_TEXT_COLOR_RED + "GAME OVER" + RESET_TEXT_COLOR);
+                }
                 builder.append(" \n");
             }
 
             return builder.toString();
         }
         else {
-            return SET_TEXT_COLOR_YELLOW + "No active games available!";
+            return SET_TEXT_COLOR_YELLOW + "No active games available!" + RESET_TEXT_COLOR;
         }
     }
 

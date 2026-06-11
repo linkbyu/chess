@@ -32,7 +32,7 @@ public final class GameUI extends ClientUI implements MessageHandler {
         this.gameData = gameData;
         game = gameData.game();
         previousMove = null;
-        replIcon = String.format("[Game \"%s\"]", gameData.gameName());
+        swapReplIcon(game);
 
         ws = new WebSocketFacade(server.getServerUrl(), this);
         ws.connectToGame(authData.authToken(), gameData.gameID());
@@ -242,7 +242,8 @@ public final class GameUI extends ClientUI implements MessageHandler {
 
     @Override
     public void notify(NotificationMessage notificationMessage) {
-        System.out.println(SET_TEXT_ITALIC + SET_TEXT_COLOR_DARK_GREY + notificationMessage.getMessage() + RESET_TEXT_ITALIC);
+        System.out.println(SET_TEXT_ITALIC + SET_TEXT_COLOR_YELLOW + notificationMessage.getMessage() +
+                           RESET_TEXT_ITALIC + RESET_TEXT_COLOR);
         printPrompt();
     }
 
@@ -257,6 +258,25 @@ public final class GameUI extends ClientUI implements MessageHandler {
             printBoardSetup();
         } catch (ResponseException e) {
             throw new RuntimeException(e);
+        }
+
+        swapReplIcon(game);
+    }
+
+    private void swapReplIcon(ChessGame game) {
+        if (!game.isGameOver()) {
+            replIcon = switch (game.getTeamTurn()) {
+                case WHITE -> SET_BG_COLOR_BLACK + SET_TEXT_COLOR_WHITE +
+                        String.format("[\"%s\": White's Turn]", gameData.gameName());
+                case BLACK -> SET_BG_COLOR_WHITE + SET_TEXT_COLOR_BLACK +
+                        String.format("[\"%s\": Black's Turn]", gameData.gameName());
+            };
+            replIcon += RESET_TEXT_COLOR + RESET_BG_COLOR;
+        }
+        else { // the game is over
+            replIcon = SET_BG_COLOR_WHITE + SET_TEXT_COLOR_RED +
+                    String.format("[\"%s\": GAME OVER]", gameData.gameName()) +
+                    RESET_TEXT_COLOR + RESET_BG_COLOR;
         }
     }
 
