@@ -34,6 +34,8 @@ public class GameServiceTest {
 
         clearService = new ClearService(userDAO, gameDAO, authDAO);
         gameService = new GameService(userDAO, gameDAO);
+
+        clearService.clear();
     }
 
 

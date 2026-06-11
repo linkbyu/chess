@@ -6,35 +6,55 @@ import websocket.messages.LoadGameMessage;
 import websocket.messages.NotificationMessage;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 public class ConnectionManager {
 
-    final HashSet<Session> connections = new HashSet<>();
+    final Map<Integer, Set<Session>> connections = new HashMap<>();
 
-    void add(Session session) {
-        connections.add(session);
+
+
+    void add(int gameID, Session session) {
+        Set<Session> gameConnections = connections.get(gameID);
+        if (gameConnections == null) {
+            connections.put(gameID, new HashSet<>() );
+            gameConnections = connections.get(gameID);
+        }
+
+        gameConnections.add(session);
     }
 
-    void remove(Session session) {
-        connections.remove(session);
+    void remove(int gameID, Session session) {
+        Set<Session> gameConnections = connections.get(gameID);
+        gameConnections.remove(session);
+
+        if (gameConnections.isEmpty()) {
+            connections.remove(gameID);
+        }
     }
 
-    public void broadcast(NotificationMessage notification, Session excludedSession) throws IOException {
+    public void broadcast(int gameID, NotificationMessage notification, Session excludedSession) throws IOException {
         String jsonString = new Gson().toJson(notification);
 
-        for (Session session : connections) {
+        Set<Session> gameConnections = connections.get(gameID);
+        for (Session session : gameConnections) {
             if (session.isOpen() && !session.equals(excludedSession)) {
-
                 session.getRemote().sendString(jsonString);
             }
         }
     }
 
-    public void loadGameForAllClients(LoadGameMessage loadGameMessage) throws IOException {
+    public void loadGameForAllClients(int gameID, LoadGameMessage loadGameMessage) throws IOException {
         String jsonString = new Gson().toJson(loadGameMessage);
-        for (Session session : connections) {
-            session.getRemote().sendString(jsonString);
+
+        Set<Session> gameConnections = connections.get(gameID);
+        for (Session session : gameConnections) {
+            if (session.isOpen()) {
+                session.getRemote().sendString(jsonString);
+            }
         }
     }
 
