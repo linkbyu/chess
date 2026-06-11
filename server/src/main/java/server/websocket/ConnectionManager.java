@@ -41,8 +41,13 @@ public class ConnectionManager {
 
         Set<Session> gameConnections = connections.get(gameID);
         for (Session session : gameConnections) {
-            if (session.isOpen() && !session.equals(excludedSession)) {
-                session.getRemote().sendString(jsonString);
+            if (session.isOpen()) {
+                if (!session.equals(excludedSession)) {
+                    session.getRemote().sendString(jsonString);
+                }
+            }
+            else {
+                remove(gameID, session); // removing closed connections
             }
         }
     }
@@ -54,6 +59,9 @@ public class ConnectionManager {
         for (Session session : gameConnections) {
             if (session.isOpen()) {
                 session.getRemote().sendString(jsonString);
+            }
+            else {
+                remove(gameID, session); // removing closed connections
             }
         }
     }

@@ -5,8 +5,8 @@ import model.GameData;
 
 public class LoadGameMessage extends ServerMessage{
 
-    private final GameData game;
-    private final ChessMove previousMove;
+    private GameData game;
+    private ChessMove previousMove;
 
     public LoadGameMessage(ServerMessageType type, GameData gameData, ChessMove previousMove) {
         super(type);

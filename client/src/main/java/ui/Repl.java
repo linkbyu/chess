@@ -26,7 +26,7 @@ public class Repl {
         System.out.print( client.help() );
         Scanner scanner = new Scanner(System.in);
 
-        String result = "";
+        String result;
         do {
             client.printPrompt();
             String line = scanner.nextLine();
@@ -60,17 +60,33 @@ public class Repl {
         command = (tokens.length > 0) ? tokens[0] : "";
         params = Arrays.copyOfRange(tokens, 1, tokens.length);
 
-        String result = client.commandMenu(command, params);
-
-        return result;
+        return client.commandMenu(command, params);
     }
 
 
         private void switchUI(String command, String[] params) throws ResponseException {
         switch (command) {
-            case "register", "r", "login", "l":
+            case "register", "r", "login":
                 userAuth = client.getAuth();
                 client = new PostloginUI(serverFacade, userAuth);
+                break;
+            case "l":
+                client = switch(client) {
+                    case PreloginUI cli -> {
+                        userAuth = client.getAuth();
+                        yield new PostloginUI(serverFacade, userAuth);
+                    }
+                    case PostloginUI cli -> {
+                        userAuth = null;
+                        yield new PreloginUI(serverFacade);
+                    }
+                    case GameUI cli ->
+                            new PostloginUI(serverFacade, userAuth);
+                    default -> {
+                        userAuth = null;
+                        yield new PreloginUI(serverFacade);
+                    }
+                };
                 break;
             case "logout":
                 userAuth = null;
@@ -87,15 +103,10 @@ public class Repl {
                 break;
         }
 
-
-        if ( command.equals("join") || command.equals("observe") ) {
-            System.out.println();
-            client.commandMenu("redraw", null);
-            System.out.print("\n" + client.help());
-        }
-        else {
-            System.out.print("\n" + client.help());
-        }
+        try {
+            Thread.sleep(20); // is there a better way?
+        } catch (InterruptedException ex) {}
+        System.out.print("\n" + client.help());
     }
 
 }

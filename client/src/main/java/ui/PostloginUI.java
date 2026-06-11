@@ -33,7 +33,7 @@ public final class PostloginUI extends ClientUI{
         builder.append(helpTextColor("join <GAME #> [WHITE|BLACK]", "join a game"));
 
         builder.append(helpTextColor("observe <GAME #>", "observe a game"));
-        builder.append(helpTextColor("logout", "when you are done"));
+        builder.append(helpTextColor("\"logout\" or \"l\"", "when you are done"));
         builder.append(helpTextColor("\"help\" or \"h\"", "show possible commands again"));
 
         return builder.toString();
@@ -48,7 +48,7 @@ public final class PostloginUI extends ClientUI{
             case "create" -> createGame(params);
             case "observe" -> observeGame(params);
 
-            case "logout" -> logout();
+            case "logout", "l" -> logout();
             case "help", "h" -> help();
             default -> throw new ResponseException(ResponseException.Code.BadRequest,
                         "Unknown command. Please try again.\n" + help());

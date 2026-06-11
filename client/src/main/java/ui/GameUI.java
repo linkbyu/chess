@@ -29,12 +29,13 @@ public final class GameUI extends ClientUI implements MessageHandler {
 
     public GameUI(ServerFacade server, AuthData authData, GameData gameData) throws ResponseException {
         super(server, authData);
-        ws = new WebSocketFacade(server.getServerUrl(), this);
-
         this.gameData = gameData;
         game = gameData.game();
         previousMove = null;
         replIcon = String.format("[Game \"%s\"]", gameData.gameName());
+
+        ws = new WebSocketFacade(server.getServerUrl(), this);
+        ws.connectToGame(authData.authToken(), gameData.gameID());
     }
 
     @Override
@@ -46,7 +47,7 @@ public final class GameUI extends ClientUI implements MessageHandler {
                                      "to move a piece"));
         builder.append(helpTextColor("\"highlight\" or \"hl\" <PiecePosition>",
                                     "to highlight the legal moves for a given piece"));
-        builder.append(helpTextColor("resign", "to forfeit the game"));
+        builder.append(helpTextColor("\"resign\"", "to forfeit the game"));
         builder.append(helpTextColor("\"leave\" or \"l\"", "to exit game"));
         builder.append(helpTextColor("\"help\" or \"h\"", "show possible commands again"));
         return builder.toString();
@@ -165,6 +166,7 @@ public final class GameUI extends ClientUI implements MessageHandler {
                 if ( previousMove != null &&
                         ( currentPosition.equals(previousMove.getStartPosition()) ||
                         currentPosition.equals(previousMove.getEndPosition()) ) ) {
+
                     setPreviousMoveSquareColor(out);
                 }
                 else {
@@ -251,6 +253,7 @@ public final class GameUI extends ClientUI implements MessageHandler {
         previousMove = loadGameMessage.getPreviousMove();
 
         try {
+            System.out.println();
             printBoardSetup();
         } catch (ResponseException e) {
             throw new RuntimeException(e);
