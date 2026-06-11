@@ -16,6 +16,7 @@ public class ChessGame {
     private boolean enPassantWhiteTurn;
     private boolean enPassantBlackTurn;
     private boolean gameOver;
+    private String winnerUsername;
 
     public ChessGame() {
         board = new ChessBoard();
@@ -23,6 +24,7 @@ public class ChessGame {
         enPassantWhiteTurn = false;
         enPassantBlackTurn = false;
         gameOver = false;
+        winnerUsername = null;
 
         board.resetBoard();
     }
@@ -33,6 +35,14 @@ public class ChessGame {
 
     public void setGameOver(boolean gameOver) {
         this.gameOver = gameOver;
+    }
+
+    public String getWinnerUsername() {
+        return winnerUsername;
+    }
+
+    public void setWinnerUsername(String winnerUsername) {
+        this.winnerUsername = winnerUsername;
     }
 
     /**

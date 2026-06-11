@@ -129,6 +129,10 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
                 throw new InvalidMoveException("You cannot move the opposing team's pieces!");
             }
 
+            // See if there is a check, checkmate, or stalemate
+            broadcastGameStateChange(game, gameData, ChessGame.TeamColor.WHITE, username);
+            broadcastGameStateChange(game, gameData, ChessGame.TeamColor.BLACK, username);
+
             // update database
             int gameID = gameData.gameID();
             GameData updatedGameData = updateGameToDatabase(gameID, gameData, game);
@@ -141,10 +145,6 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
             String msg = String.format("%s made the move %s %s", username, requestedPiece, requestedMove);
             var notification = new NotificationMessage(ServerMessage.ServerMessageType.NOTIFICATION, msg);
             connections.broadcast(gameID, notification, rootSession);
-
-            // See if there is a check, checkmate, or stalemate
-            broadcastGameStateChange(gameID, game, ChessGame.TeamColor.WHITE);
-            broadcastGameStateChange(gameID, game, ChessGame.TeamColor.BLACK);
 
 
         } catch (InvalidMoveException ex) {
@@ -163,24 +163,31 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
     }
 
 
-    private void broadcastGameStateChange(int gameID, ChessGame game, ChessGame.TeamColor teamColor) throws IOException {
-        String gameStateMsg = createGameStateMessage(game, teamColor);
+    private void broadcastGameStateChange(ChessGame game, GameData oldGameData, ChessGame.TeamColor teamColor, String username) throws IOException {
+        String gameStateMsg = createGameStateMessage(game, oldGameData, teamColor, username);
 
-        if ( !gameStateMsg.isEmpty() ) {
+        if ( !gameStateMsg.isEmpty() ) { // game state has changed
             var gameStateNotification = new NotificationMessage(ServerMessage.ServerMessageType.NOTIFICATION, gameStateMsg);
-            connections.broadcast(gameID, gameStateNotification, null);
+            connections.broadcast(oldGameData.gameID(), gameStateNotification, null);
         }
     }
 
-    private String createGameStateMessage(ChessGame game, ChessGame.TeamColor teamColor) {
+    private String createGameStateMessage(ChessGame game, GameData oldGameData, ChessGame.TeamColor teamColor, String username) {
         String msg = "";
         if ( game.isInCheckmate(teamColor) ) {
+            game.setGameOver(true);
+            String opposingPlayerUsername = findOpposingTeamPlayer(oldGameData.whiteUsername(),
+                                                                   oldGameData.blackUsername(), username);
+            game.setWinnerUsername(opposingPlayerUsername);
+
             msg = String.format("%s Team is in Checkmate.", teamColor);
         }
         else if ( game.isInCheck(teamColor) ) {
             msg = String.format("%s Team is in Check.", teamColor);
         }
         else if ( game.isInStalemate(teamColor) ) {
+            game.setGameOver(true);
+            game.setWinnerUsername(null);
             msg = String.format("%s Team is in a Stalemate.", teamColor);
         }
 
@@ -200,6 +207,10 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
 
             // the user is a player and game hasn't ended yet, so mark game as over
             game.setGameOver(true);
+            String opposingPlayerUsername =
+                    findOpposingTeamPlayer(gameData.whiteUsername(), gameData.blackUsername(), username);
+            game.setWinnerUsername(opposingPlayerUsername);
+
             int gameID = gameData.gameID();
             updateGameToDatabase(gameID, gameData, game);
 
@@ -259,6 +270,18 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
         }
         else if ( username.equals( gameData.blackUsername()) ) {
             return ChessGame.TeamColor.BLACK;
+        }
+        else { // they're an observer
+            return null;
+        }
+    }
+
+    private String findOpposingTeamPlayer(String whiteUsername, String blackUsername, String username) {
+        if ( username.equals( whiteUsername ) ) {
+            return blackUsername;
+        }
+        else if ( username.equals( blackUsername ) ) {
+            return whiteUsername;
         }
         else { // they're an observer
             return null;

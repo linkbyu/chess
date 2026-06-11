@@ -41,30 +41,76 @@ public final class GameUI extends ClientUI implements MessageHandler {
     @Override
     public String help() {
         var builder = new StringBuilder();
+        if (game.isGameOver()) {
+                String whiteUsername = gameData.whiteUsername();
+                String blackUsername = gameData.blackUsername();
+                String winningUsername = game.getWinnerUsername();
 
-        builder.append(helpTextColor("\"redraw\" or \"r\"", "to redraw the board"));
-        builder.append(helpTextColor("\"move\" or \"m\" <source> <destination> <promotion piece if applicable>",
-                                     "to move a piece"));
-        builder.append(helpTextColor("\"highlight\" or \"hl\" <PiecePosition>",
-                                    "to highlight the legal moves for a given piece"));
-        builder.append(helpTextColor("\"resign\"", "to forfeit the game"));
-        builder.append(helpTextColor("\"leave\" or \"l\"", "to exit game"));
-        builder.append(helpTextColor("\"help\" or \"h\"", "show possible commands again"));
+                builder.append(SET_TEXT_COLOR_YELLOW + BLACK_ROOK);
+            if (winningUsername == null) {
+                builder.append(String.format("It's a tie! " +
+                        "(Black Team (%s) is in stalemate against White Team (%s))", blackUsername, whiteUsername));
+            } else if (winningUsername.equals(whiteUsername)) {
+                builder.append(String.format("White Team (%s) won against Black Team (%s)", whiteUsername, blackUsername));
+            } else if (winningUsername.equals(blackUsername)) {
+                builder.append(String.format("Black Team (%s) won against White Team (%s)", blackUsername, whiteUsername));
+            } else {
+                builder.append(SET_TEXT_COLOR_RED + "GAME OVER: game status unclear");
+            }
+            builder.append(SET_TEXT_COLOR_YELLOW + WHITE_ROOK + RESET_TEXT_COLOR + "\n");
+
+            // Commands:
+            builder.append(helpTextColor("\"redraw\" or \"r\"", "to redraw the board"));
+            builder.append(helpTextColor("\"highlight\" or \"hl\" <PiecePosition>",
+                    "to highlight the legal moves for a given piece"));
+            builder.append(helpTextColor("\"leave\" or \"l\"", "to exit game"));
+            builder.append(helpTextColor("\"help\" or \"h\"", "show possible commands again"));
+        }
+        else { // the game is ongoing
+
+            builder.append(SET_TEXT_COLOR_WHITE + BLACK_ROOK + "Command Menu: " + WHITE_ROOK +
+                            RESET_TEXT_COLOR + "\n");
+
+            builder.append(helpTextColor("\"redraw\" or \"r\"", "to redraw the board"));
+            builder.append(helpTextColor("\"move\" or \"m\" <source> <destination> <promotion piece if applicable>",
+                    "to move a piece"));
+            builder.append(helpTextColor("\"highlight\" or \"hl\" <PiecePosition>",
+                    "to highlight the legal moves for a given piece"));
+            builder.append(helpTextColor("\"resign\"", "to forfeit the game"));
+            builder.append(helpTextColor("\"leave\" or \"l\"", "to exit game"));
+            builder.append(helpTextColor("\"help\" or \"h\"", "show possible commands again"));
+        }
         return builder.toString();
     }
 
     @Override
     String commandMenu(String command, String[] params) throws ResponseException {
-        return switch(command) {
-            case "redraw", "r" -> printBoardSetup();
-            case "leave", "l" -> leave();
-            case "move", "m" -> makeMove(params);
-            case "highlight", "hl" -> highlightLegalMoves(params);
-            case "resign" -> resign();
-            case "help", "h" -> help();
-            default -> throw new ResponseException(ResponseException.Code.BadRequest,
+        if (game.isGameOver()) {
+            return switch (command) {
+                case "redraw", "r" -> printBoardSetup();
+                case "leave", "l" -> leave();
+                case "highlight", "hl" -> highlightLegalMoves(params);
+                case "help", "h" -> help();
+                case "move", "m", "resign" ->
+                        throw new ResponseException(ResponseException.Code.BadRequest,
+                                "That command is not available anymore. The game is over. " +
+                                        "Please try again.\n" + help());
+                default -> throw new ResponseException(ResponseException.Code.BadRequest,
                         "Unknown command. Please try again.\n" + help());
-        };
+            };
+        }
+        else { // game is ongoing
+            return switch (command) {
+                case "redraw", "r" -> printBoardSetup();
+                case "leave", "l" -> leave();
+                case "move", "m" -> makeMove(params);
+                case "highlight", "hl" -> highlightLegalMoves(params);
+                case "resign" -> resign();
+                case "help", "h" -> help();
+                default -> throw new ResponseException(ResponseException.Code.BadRequest,
+                        "Unknown command. Please try again.\n" + help());
+            };
+        }
     }
 
     private String printBoardSetup() throws ResponseException {
@@ -124,7 +170,7 @@ public final class GameUI extends ClientUI implements MessageHandler {
     }
 
     private static void setBorderColor(PrintStream out) {
-        out.print(SET_BG_COLOR_WHITE);
+        out.print(SET_BG_COLOR_BLUE);
         out.print(SET_TEXT_COLOR_DARK_GREY);
     }
 
@@ -254,28 +300,30 @@ public final class GameUI extends ClientUI implements MessageHandler {
         previousMove = loadGameMessage.getPreviousMove();
 
         try {
-            System.out.println();
+            Thread.sleep(50); // is there a better way?
+
+            System.out.print("\n\n");
             printBoardSetup();
         } catch (ResponseException e) {
             throw new RuntimeException(e);
-        }
+        } catch (InterruptedException ex) {}
 
         swapReplIcon(game);
     }
 
     private void swapReplIcon(ChessGame game) {
         if (!game.isGameOver()) {
-            replIcon = switch (game.getTeamTurn()) {
-                case WHITE -> SET_BG_COLOR_BLACK + SET_TEXT_COLOR_WHITE +
-                        String.format("[\"%s\": White's Turn]", gameData.gameName());
-                case BLACK -> SET_BG_COLOR_WHITE + SET_TEXT_COLOR_BLACK +
-                        String.format("[\"%s\": Black's Turn]", gameData.gameName());
+            replIcon = SET_BG_COLOR_BLACK + SET_TEXT_COLOR_WHITE;
+            replIcon += switch (game.getTeamTurn()) {
+                case WHITE -> String.format("[\"%s\": White's Turn]", gameData.gameName());
+                case BLACK -> String.format("[\"%s\": Black's Turn]", gameData.gameName());
             };
             replIcon += RESET_TEXT_COLOR + RESET_BG_COLOR;
         }
         else { // the game is over
-            replIcon = SET_BG_COLOR_WHITE + SET_TEXT_COLOR_RED +
-                    String.format("[\"%s\": GAME OVER]", gameData.gameName()) +
+            replIcon = SET_BG_COLOR_BLACK + SET_TEXT_COLOR_WHITE +
+                    String.format("[\"%s\": ", gameData.gameName()) + SET_TEXT_COLOR_RED +
+                    "GAME OVER" + SET_TEXT_COLOR_WHITE + "]" +
                     RESET_TEXT_COLOR + RESET_BG_COLOR;
         }
     }
