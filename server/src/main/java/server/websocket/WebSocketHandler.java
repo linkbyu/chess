@@ -185,10 +185,6 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
             int gameID = gameData.gameID();
             updateGameToDatabase(gameID, gameData, game);
 
-            // load forfeited game
-            connections.loadGameForAllClients(gameID,
-                    new LoadGameMessage(ServerMessage.ServerMessageType.LOAD_GAME, gameData, null));
-
             // notify all clients that the root player has resigned
             var notification = getResignMessage(gameData, username, teamColor);
             connections.broadcast(gameID, notification, null);
