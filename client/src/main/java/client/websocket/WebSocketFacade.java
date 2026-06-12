@@ -1,6 +1,8 @@
 package client.websocket;
 
 import chess.ChessMove;
+import chess.ChessPiece;
+import chess.InvalidMoveException;
 import com.google.gson.Gson;
 import exception.ResponseException;
 import jakarta.websocket.*;
@@ -88,6 +90,9 @@ public class WebSocketFacade extends Endpoint {
     public void makeMove(String authToken, int gameID, ChessMove requestedMove) throws ResponseException {
         var moveCommand = new MakeMoveCommand(UserGameCommand.CommandType.MAKE_MOVE, authToken, gameID, requestedMove);
         send( gson.toJson(moveCommand) );
+        try {
+            Thread.sleep(60); // is there a better way?
+        } catch (InterruptedException ex) {}
     }
 
     public void resignGame(String authToken, int gameID) throws ResponseException {

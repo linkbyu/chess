@@ -102,8 +102,11 @@ public class Repl {
                 client = new PostloginUI(serverFacade, userAuth);
                 break;
         }
+        try {
+            Thread.sleep(50); // is there a better way?
+        } catch (InterruptedException ex) {}
 
-        System.out.print("\n" + client.help());
+            System.out.print("\n" + client.help());
     }
 
 }

@@ -18,7 +18,6 @@ import java.util.Collection;
 import java.util.function.Predicate;
 
 import static ui.EscapeSequences.*;
-import static ui.Repl.RESPONSE_SPACING;
 
 public final class GameUI extends ClientUI implements MessageHandler {
 
@@ -98,7 +97,7 @@ public final class GameUI extends ClientUI implements MessageHandler {
     String commandMenu(String command, String[] params) throws ResponseException {
         if (game.getGameStatusInfo().isGameOver()) {
             return switch (command) {
-                case "redraw", "r" -> printBoardSetup();
+                case "redraw", "r" -> printBoardSetup(null);
                 case "leave", "l" -> leave();
                 case "highlight", "hl" -> highlightLegalMoves(params);
                 case "help", "h" -> help();
@@ -112,7 +111,7 @@ public final class GameUI extends ClientUI implements MessageHandler {
         }
         else { // game is ongoing
             return switch (command) {
-                case "redraw", "r" -> printBoardSetup();
+                case "redraw", "r" -> printBoardSetup(null);
                 case "leave", "l" -> leave();
                 case "move", "m" -> makeMove(params);
                 case "highlight", "hl" -> highlightLegalMoves(params);
@@ -124,7 +123,7 @@ public final class GameUI extends ClientUI implements MessageHandler {
         }
     }
 
-    private String printBoardSetup() throws ResponseException {
+    private String printBoardSetup(Collection<ChessMove> validMoves) throws ResponseException {
         var out = new PrintStream(System.out, true, StandardCharsets.UTF_8);
         out.print(ERASE_SCREEN);
         var teamColor = determineTeamToPrint();
@@ -142,7 +141,7 @@ public final class GameUI extends ClientUI implements MessageHandler {
 
             case null -> throw new ResponseException(ResponseException.Code.BadRequest, "No team given.");
         }
-        drawChessBoard(out, info);
+        drawChessBoard(out, info, validMoves);
 
         drawLetterLabels(out, teamColor);
         return "";
@@ -202,7 +201,7 @@ public final class GameUI extends ClientUI implements MessageHandler {
     }
 
 
-    private void drawChessBoard(PrintStream out, DrawBoardInfo info) {
+    private void drawChessBoard(PrintStream out, DrawBoardInfo info, Collection<ChessMove> validMoves) {
         setBorderColor(out);
 
         // get params from DrawBoardInfo object
@@ -220,7 +219,12 @@ public final class GameUI extends ClientUI implements MessageHandler {
             int colIter = info.colIter();
             while (colCondition.test(colNum)) {
                 var currentPosition = new ChessPosition(rowNum, colNum);
-                if ( previousMove != null &&
+                if (validMoves != null && !validMoves.isEmpty() &&
+                        validMovesContainsCurrentPos(validMoves, currentPosition)) {
+
+                    setLegalMoveSquareColor(out);
+                }
+                else if ( previousMove != null &&
                         ( currentPosition.equals(previousMove.getStartPosition()) ||
                         currentPosition.equals(previousMove.getEndPosition()) ) ) {
 
@@ -240,6 +244,11 @@ public final class GameUI extends ClientUI implements MessageHandler {
 
             rowNum += rowIter;
         }
+    }
+
+    private void setLegalMoveSquareColor(PrintStream out) {
+        out.print(SET_BG_COLOR_YELLOW);
+        out.print(SET_TEXT_COLOR_BLUE);
     }
 
     private void setPreviousMoveSquareColor(PrintStream out) {
@@ -299,6 +308,13 @@ public final class GameUI extends ClientUI implements MessageHandler {
 
     @Override
     public void notify(NotificationMessage notificationMessage) {
+        if (notificationMessage.isFill()){
+            //System.out.print("\n");
+        }
+        else {
+            System.out.print("\n");
+        }
+
         System.out.println(SET_TEXT_ITALIC + SET_TEXT_COLOR_YELLOW + notificationMessage.getMessage() +
                            RESET_TEXT_ITALIC + RESET_TEXT_COLOR);
         printPrompt();
@@ -311,13 +327,11 @@ public final class GameUI extends ClientUI implements MessageHandler {
         previousMove = loadGameMessage.getPreviousMove();
 
         try {
-            Thread.sleep(50); // is there a better way?
-
             System.out.print("\n\n");
-            printBoardSetup();
+            printBoardSetup(null);
         } catch (ResponseException e) {
             throw new RuntimeException(e);
-        } catch (InterruptedException ex) {}
+        }
 
         swapReplIcon(game);
     }
@@ -342,7 +356,7 @@ public final class GameUI extends ClientUI implements MessageHandler {
     @Override
     public void showError(ErrorMessage errorMessage) {
         String msg = errorMessage.getErrorMessage();
-        System.out.println("\n" + RESPONSE_SPACING + SET_TEXT_COLOR_RED + msg +
+        System.out.println("\n" + SET_TEXT_COLOR_RED + msg +
                             RESET_TEXT_COLOR);
         printPrompt();
     }
@@ -355,10 +369,15 @@ public final class GameUI extends ClientUI implements MessageHandler {
 
     private String makeMove(String[] params) throws ResponseException {
         ChessMove requestedMove = createChessMove(params);
+        try {
+            gameData.invalidMoveCheck(requestedMove, authData.username());
+        } catch (InvalidMoveException ex) {
+            throw new ResponseException(ResponseException.Code.BadRequest, ex.getMessage());
+        }
         ws.makeMove(authData.authToken(), gameData.gameID(), requestedMove);
 
-        ChessPiece selectedPiece = game.getBoard().getPiece(requestedMove.getStartPosition());
-        return String.format("Moved %s %s", selectedPiece, requestedMove);
+        ChessPiece selectedPiece = game.getBoard().getPiece(requestedMove.getEndPosition());
+        return String.format("Moved %s %s\n", selectedPiece, requestedMove);
     }
 
     private ChessMove createChessMove(String[] params) throws ResponseException {
@@ -423,18 +442,46 @@ public final class GameUI extends ClientUI implements MessageHandler {
         if (params.length == 1) {
             ChessPosition position = createChessPosition(params[0]);
             ChessPiece requestedPiece = game.getBoard().getPiece(position);
-            Collection<ChessMove> possibleMoves = game.validMoves(position);
-
-
+            if (requestedPiece != null) {
+                Collection<ChessMove> validMoves = game.validMoves(position);
+                if (!validMoves.isEmpty()) {
+                    printBoardSetup(validMoves);
+                }
+                else {
+                    throw new ResponseException(ResponseException.Code.BadRequest,
+                            requestedPiece + "has no available moves!");
+                }
+            }
+            else {
+                throw new ResponseException(ResponseException.Code.BadRequest,
+                        "There is no piece at that position!");
+            }
             return String.format("Highlighted legal moves for %s", requestedPiece);
         }
         throw new ResponseException(ResponseException.Code.BadRequest,
                 "Expected: \"hl\" <PiecePosition>");
     }
 
+    private boolean validMovesContainsCurrentPos(Collection<ChessMove> validMoves,
+                                                 ChessPosition currentPosition) {
+        for (ChessMove move : validMoves) {
+            if (currentPosition.equals(move.getEndPosition())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private String resign() throws ResponseException {
-        ws.resignGame( authData.authToken(), gameData.gameID() );
-        return "Forfeited game.";
+        try {
+            var teamColor = gameData.findWhichTeamUserIsOn(authData.username());
+            gameData.invalidResignCheck(teamColor);
+
+            ws.resignGame( authData.authToken(), gameData.gameID() );
+            return "Forfeited game.";
+        } catch (InvalidMoveException ex) {
+            throw new ResponseException(ResponseException.Code.BadRequest, ex.getMessage());
+        }
     }
 
 }

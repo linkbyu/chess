@@ -84,7 +84,7 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
         }
 
         // broadcast notification to everyone else in the game
-        var notification = new NotificationMessage(ServerMessage.ServerMessageType.NOTIFICATION, msg);
+        var notification = new NotificationMessage(ServerMessage.ServerMessageType.NOTIFICATION, msg, false);
         connections.broadcast(gameData.gameID(), notification, rootSession);
 
         // LoadGame Message to Root User
@@ -101,39 +101,12 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
     private void makeMove(Session rootSession, GameData gameData, String username, ChessMove requestedMove) throws IOException, DataAccessException {
         ChessGame game = gameData.game();
         try {
-            if (game.getGameStatusInfo().isGameOver()) { // check if game is already over
-                throw new InvalidMoveException("Game is already over.");
-            }
-
-            // attempt requested move
-            var userTeamColor = findWhichTeamUserIsOn(gameData, username);
-            if ( userTeamColor == null ) { // person is an observer
-                throw new InvalidMoveException("Observers cannot participate in the game!");
-            }
-            ChessPiece requestedPiece = game.getBoard().getPiece(requestedMove.getStartPosition());
-            if (requestedPiece == null) { // piece does not exist
-                throw new InvalidMoveException("No piece found at the starting position.");
-            }
-            if ( userTeamColor != game.getTeamTurn() ) { // tried to move when it's not the player's turn
-                throw new InvalidMoveException("It is not your turn!");
-            }
-
-
-
-            if ( userTeamColor == requestedPiece.getTeamColor() ) { // check if they're moving their own team's pieces
-                try {
-                    game.makeMove(requestedMove);
-                } catch (InvalidMoveException e) {
-                    throw new InvalidMoveException(String.format("Invalid move with requested piece %s", requestedPiece.getPieceType()) );
-                }
-            }
-            else {
-                throw new InvalidMoveException("You cannot move the opposing team's pieces!");
-            }
+            gameData.invalidMoveCheck(requestedMove, username);
+            ChessPiece requestedPiece = game.getBoard().getPiece(requestedMove.getEndPosition());
 
             // See if there is a check, checkmate, or stalemate
-            broadcastGameStateChange(game, gameData, ChessGame.TeamColor.WHITE, username);
-            broadcastGameStateChange(game, gameData, ChessGame.TeamColor.BLACK, username);
+            String gameStateMsgWhite = createGameStateMessage(game, gameData, ChessGame.TeamColor.WHITE);
+            String gameStateMsgBlack = createGameStateMessage(game, gameData, ChessGame.TeamColor.BLACK);
 
             // update database
             int gameID = gameData.gameID();
@@ -145,8 +118,12 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
 
             // notify all other clients what move was made and by whom
             String msg = String.format("%s made the move %s %s", username, requestedPiece, requestedMove);
-            var notification = new NotificationMessage(ServerMessage.ServerMessageType.NOTIFICATION, msg);
+            var notification = new NotificationMessage(ServerMessage.ServerMessageType.NOTIFICATION, msg, true);
             connections.broadcast(gameID, notification, rootSession);
+
+            // broadcast any game changes we found earlier
+            broadcastGameStateChange(updatedGameData, gameStateMsgWhite);
+            broadcastGameStateChange(updatedGameData, gameStateMsgBlack);
 
 
         } catch (InvalidMoveException ex) {
@@ -165,16 +142,14 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
     }
 
 
-    private void broadcastGameStateChange(ChessGame game, GameData oldGameData, ChessGame.TeamColor teamColor, String username) throws IOException {
-        String gameStateMsg = createGameStateMessage(game, oldGameData, teamColor, username);
-
+    private void broadcastGameStateChange(GameData gameData, String gameStateMsg) throws IOException {
         if ( !gameStateMsg.isEmpty() ) { // game state has changed
-            var gameStateNotification = new NotificationMessage(ServerMessage.ServerMessageType.NOTIFICATION, gameStateMsg);
-            connections.broadcast(oldGameData.gameID(), gameStateNotification, null);
+            var gameStateNotification = new NotificationMessage(ServerMessage.ServerMessageType.NOTIFICATION, gameStateMsg, false);
+            connections.broadcast(gameData.gameID(), gameStateNotification, null);
         }
     }
 
-    private String createGameStateMessage(ChessGame game, GameData oldGameData, ChessGame.TeamColor teamColor, String username) {
+    private String createGameStateMessage(ChessGame game, GameData oldGameData, ChessGame.TeamColor teamColor) {
         String msg = "";
         if ( game.isInCheckmate(teamColor) ) {
             game.setGameStatusInfo(new GameStatusInfo(GameStatusInfo.GameStatus.CHECKMATE, oldGameData.whiteUsername(),
@@ -198,22 +173,21 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
 
     private void resign(Session rootSession, GameData gameData, String username) throws IOException, DataAccessException {
         try {
-            ChessGame game = gameData.game();
-            var gameStatusInfo = game.getGameStatusInfo();
-            if (gameStatusInfo.isGameOver()) { // check if game is already over
-                throw new InvalidMoveException("Game is already over.");
-            }
-            var teamColor = findWhichTeamUserIsOn(gameData, username);
-            if (teamColor == null) { // the user is an observer
-                throw new InvalidMoveException("Observers cannot participate in the game!");
-            }
+            var teamColor = gameData.findWhichTeamUserIsOn(username);
+            gameData.invalidResignCheck(teamColor);
 
             // the user is a player and game hasn't ended yet, so mark game as over
+
+            var game = gameData.game();
             game.setGameStatusInfo(new GameStatusInfo(GameStatusInfo.GameStatus.CHECKMATE, gameData.whiteUsername(),
                     gameData.blackUsername(), teamColor));
 
             int gameID = gameData.gameID();
             updateGameToDatabase(gameID, gameData, game);
+
+            // load forfeited game
+            connections.loadGameForAllClients(gameID,
+                    new LoadGameMessage(ServerMessage.ServerMessageType.LOAD_GAME, gameData, null));
 
             // notify all clients that the root player has resigned
             var notification = getResignMessage(gameData, username, teamColor);
@@ -232,14 +206,14 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
             opposingTeamUsername = gameData.whiteUsername();
         }
         String msg = String.format("%s has forfeit. %s wins!", username, opposingTeamUsername);
-        return new NotificationMessage(ServerMessage.ServerMessageType.NOTIFICATION, msg);
+        return new NotificationMessage(ServerMessage.ServerMessageType.NOTIFICATION, msg, false);
     }
 
     private void leave(Session rootSession, GameData gameData, String username) throws DataAccessException, IOException {
         int gameID = gameData.gameID();
 
         // update game if they were a player
-        var teamColor = findWhichTeamUserIsOn(gameData, username);
+        var teamColor = gameData.findWhichTeamUserIsOn(username);
         switch (teamColor) {
             case WHITE: {
                 var updatedGameData = new GameData(gameID, null, gameData.blackUsername(),
@@ -256,36 +230,12 @@ public class WebSocketHandler implements WsConnectHandler, WsMessageHandler, WsC
             case null:
 
         }
-
         connections.remove(gameID, rootSession);
 
         // alert all other clients that the root client left (both observers and players)
         String msg = String.format("%s has left the game", username);
-        var notification = new NotificationMessage(ServerMessage.ServerMessageType.NOTIFICATION, msg);
+        var notification = new NotificationMessage(ServerMessage.ServerMessageType.NOTIFICATION, msg, false);
         connections.broadcast(gameID, notification, null);
-    }
 
-    private ChessGame.TeamColor findWhichTeamUserIsOn(GameData gameData, String username) {
-        if ( username.equals( gameData.whiteUsername()) ) {
-            return ChessGame.TeamColor.WHITE;
-        }
-        else if ( username.equals( gameData.blackUsername()) ) {
-            return ChessGame.TeamColor.BLACK;
-        }
-        else { // they're an observer
-            return null;
-        }
     }
-
-    /*private String findOpposingTeamPlayer(String whiteUsername, String blackUsername, String username) {
-        if ( username.equals( whiteUsername ) ) {
-            return blackUsername;
-        }
-        else if ( username.equals( blackUsername ) ) {
-            return whiteUsername;
-        }
-        else { // they're an observer
-            return null;
-        }
-    }*/
 }

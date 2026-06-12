@@ -29,10 +29,12 @@ public class ConnectionManager {
 
     void remove(int gameID, Session session) {
         Set<Session> gameConnections = connections.get(gameID);
-        gameConnections.remove(session);
+        if (gameConnections != null && !gameConnections.isEmpty()) {
+            gameConnections.remove(session);
 
-        if (gameConnections.isEmpty()) {
-            connections.remove(gameID);
+            if (gameConnections.isEmpty()) {
+                connections.remove(gameID);
+            }
         }
     }
 
@@ -40,15 +42,18 @@ public class ConnectionManager {
         String jsonString = new Gson().toJson(notification);
 
         Set<Session> gameConnections = connections.get(gameID);
-        for (Session session : gameConnections) {
-            if (session.isOpen()) {
-                if (!session.equals(excludedSession)) {
-                    session.getRemote().sendString(jsonString);
+        if (gameConnections != null) {
+            for (Session session : gameConnections) {
+                if (session.isOpen()) {
+                    if (!session.equals(excludedSession)) {
+                        session.getRemote().sendString(jsonString);
+                    }
                 }
-            }
             /*else {
+                // would need to create deep copy and then iterate to prevent concurrency iterator error
                 remove(gameID, session); // removing closed connections
             }*/
+            }
         }
     }
 
@@ -56,13 +61,15 @@ public class ConnectionManager {
         String jsonString = new Gson().toJson(loadGameMessage);
 
         Set<Session> gameConnections = connections.get(gameID);
-        for (Session session : gameConnections) {
-            if (session.isOpen()) {
-                session.getRemote().sendString(jsonString);
-            }
+        if (gameConnections != null) {
+            for (Session session : gameConnections) {
+                if (session.isOpen()) {
+                    session.getRemote().sendString(jsonString);
+                }
             /*else {
                 remove(gameID, session); // removing closed connections
             }*/
+            }
         }
     }
 
